@@ -1,0 +1,246 @@
+<organization>
+- Use a single HTML template for the frontend layout.
+Build reusable UI components as Alpine.js components.
+
+- Header: <type>(<scope>): <short summary> (e.g. feat(auth): add signup handler)
+A short, concise description of the change.
+
+Body: REQUIRED. The body explains the motivation for the change:
+- The business or technical problem being solved
+- The reasoning behind the approach
+- Important context for future developers
+
+Do not describe the code changes in the body - that's what the git diff is for.
+
+Footer: Reference the relevant user story IDs (e.g. Refs Story 001 – Signup).
+
+Workflow: After each logical change:
+1. Stage your changes
+2. Write a concise header describing what changed
+3. Write a body focused on motivation and context
+4. Add the story reference in the footer
+5. Review and commit
+
+- Keep README.md updated with:
+Project description, setup steps, local development guide.
+Key design decisions, especially deviations from standard Go patterns.
+Overview of conventions (user stories and test layout).
+When major design decisions are made, add a file under docs/decisions/ for future developers.
+
+- Use PostgreSQL for both development and test databases.
+- Follow clean architecture principles with clear separation between:
+  - Domain models (internal/domain/)
+  - Use cases (internal/usecase/)
+  - Adapters (internal/adapter/)
+
+- Maintain user stories as Markdown in docs/features/, organized by feature with ordered numeric prefixes (e.g., 001_signup.md).
+Match each story with a corresponding integration test file in test/integration/, with identical numeric prefixes.
+</organization>
+
+<quality>
+- If you find yourself passing `true`/`false`, favor two separate methods or a small struct.
+- Only modify files directly related to the current user story or bugfix; avoid unrelated edits.
+- Do not optimize code until it is proven necessary by real performance concerns.
+- Follow Go best practices and idioms:
+  - Use interfaces for behavior
+  - Keep interfaces small and focused
+  - Prefer composition over inheritance
+  - Use meaningful names that explain purpose
+- For any complex input validation, create a dedicated struct with validation methods.
+- Use dependency injection via interfaces for better testability.
+</quality>
+
+<security>
+- Whenever we need to make any changes to the database, make sure to take baby steps. Smallest increments we can.
+- Only use force push when absolutely necessary (e.g., after rebasing or amending commits that were already pushed).
+When force pushing is required, always use --force-with-lease instead of -f to ensure you don't accidentally overwrite others' work.
+Try a regular git push first - only use force options if the regular push fails with a non-fast-forward error.
+
+- Prefer well-maintained, production-tested Go packages with:
+  - Active maintenance
+  - Good test coverage
+  - No known security vulnerabilities
+  - Clear documentation
+
+Run gosec and nancy for security scanning after adding new dependencies.
+</security>
+
+<testing>
+- If a test appears to be flaky, it must be fixed. Look for any race conditions, timing issues, or goroutine leaks.
+- When tests fail, only fix them one at a time. Run just the failing test until it succeeds. Then rerun all, and fix the next one. Repeat until all pass.
+- Do not use mocks when testing, if at all possible. Favor interfaces and dependency injection to make code more testable. Mocks are a last resort.
+
+Cover both happy and unhappy paths.
+
+Do not assert against specific CSS values or HTML elements. Focus on functionality and content.
+
+Use testify/assert for clearer test assertions.
+
+For HTML5 validation (e.g., required fields), test the attributes directly rather than trying to submit invalid data.
+
+# Testing Required Fields
+
+When testing form fields that are required:
+
+1. Test HTML5 validation by checking the required attribute:
+```go
+func TestRequiredFields(t *testing.T) {
+    doc := parseHTML(t, html)
+    email := doc.Find("input[name='email']")
+    assert.Equal(t, "true", email.Attr("required"))
+    password := doc.Find("input[name='password']")
+    assert.Equal(t, "true", password.Attr("required"))
+}
+```
+
+2. DO NOT test for server-side "blank" validation messages by disabling HTML5 validation. The HTML5 validation prevents these from ever being shown to users.
+
+3. DO test other server-side validations that HTML5 cannot handle:
+   - Uniqueness constraints
+   - Format/regex validations
+   - Complex validations (e.g., password confirmation matching)
+   - Custom business logic
+
+Example:
+```go
+func TestEmailUniqueness(t *testing.T) {
+    // Good - Testing server-side uniqueness validation
+    existingUser := createTestUser(t, "taken@example.com")
+    
+    input := SignupInput{
+        Email:    "taken@example.com",
+        Name:     "Another User",
+        Password: "password123",
+    }
+    
+    _, err := authService.Signup(input)
+    assert.ErrorIs(t, err, ErrEmailTaken)
+}
+
+// Bad - Testing what HTML5 validation already prevents
+func TestMissingFields(t *testing.T) {
+    // Don't do this - HTML5 prevents this scenario
+    input := SignupInput{}
+    _, err := authService.Signup(input)
+    assert.ErrorIs(t, err, ErrEmailRequired)
+}
+```
+
+# Testing Guidelines
+
+1. Use table-driven tests for multiple test cases
+2. Use meaningful test names that describe the scenario
+3. Follow the Arrange-Act-Assert pattern
+4. Use subtests for better organization
+5. Clean up test data in defer functions
+
+Example:
+```go
+func TestUserSignup(t *testing.T) {
+    tests := []struct {
+        name    string
+        input   SignupInput
+        wantErr error
+    }{
+        {
+            name: "valid input succeeds",
+            input: SignupInput{
+                Email:    "test@example.com",
+                Password: "password123",
+                Name:     "Test User",
+            },
+            wantErr: nil,
+        },
+        {
+            name: "duplicate email fails",
+            input: SignupInput{
+                Email:    "existing@example.com",
+                Password: "password123",
+                Name:     "Test User",
+            },
+            wantErr: ErrEmailTaken,
+        },
+    }
+
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            // Arrange
+            db := setupTestDB(t)
+            defer cleanupTestDB(t, db)
+            
+            if tt.name == "duplicate email fails" {
+                createTestUser(t, tt.input.Email)
+            }
+            
+            // Act
+            _, err := authService.Signup(tt.input)
+            
+            // Assert
+            assert.ErrorIs(t, err, tt.wantErr)
+        })
+    }
+}
+```
+
+# Frontend Testing
+
+1. Use Playwright for end-to-end testing
+2. Focus on user journeys and critical paths
+3. Test both JavaScript and no-JavaScript scenarios
+4. Use data-testid attributes for test selectors
+5. Keep selectors in a central location
+
+Example:
+```go
+func TestLoginFlow(t *testing.T) {
+    // Start Playwright
+    pw := playwright.Must(playwright.Run())
+    defer pw.Stop()
+    
+    browser := pw.Chromium.Must(pw.Chromium.Launch())
+    defer browser.Close()
+    
+    page := browser.Must(browser.NewPage())
+    
+    // Navigate to login
+    page.Must(page.Goto("http://localhost:8080/login"))
+    
+    // Fill form
+    page.Must(page.Fill("[data-testid=email]", "test@example.com"))
+    page.Must(page.Fill("[data-testid=password]", "password123"))
+    
+    // Submit
+    page.Must(page.Click("[data-testid=submit]"))
+    
+    // Assert redirect
+    assert.Equal(t, "/dashboard", page.Must(page.URL()))
+}
+```
+
+# Accessibility Testing
+
+1. All interactive elements MUST be keyboard accessible
+2. Use semantic HTML elements appropriately
+3. Include proper ARIA attributes where needed
+4. Test with screen readers
+5. Maintain proper heading hierarchy
+
+Custom widgets (dropdowns, modals) MUST have proper ARIA attributes (aria-expanded, aria-haspopup, etc.)
+
+Examples:
+```html
+<!-- Good - Button with clear purpose -->
+<button 
+    type="button"
+    aria-haspopup="true"
+    aria-expanded="false"
+    aria-controls="user-menu"
+    data-testid="user-menu-button">
+    Open Menu
+</button>
+
+<!-- Bad - Generic click handler -->
+<div onclick="toggleMenu()" role="button">
+    Menu
+</div>
+```

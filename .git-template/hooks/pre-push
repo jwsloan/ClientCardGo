@@ -1,0 +1,17 @@
+#!/usr/bin/env python3
+
+import os
+import sys
+
+# Read the push command from the environment
+command = os.popen(f'ps -ocommand= -p {os.getppid()}').read().strip()
+
+# Check if it's a force push
+if ' -f ' in command or ' --force ' in command:
+    print("❌ Error: Force pushing with -f or --force is not allowed")
+    print("💡 Use --force-with-lease instead to safely force push")
+    print("   This ensures you don't accidentally overwrite others' work")
+    sys.exit(1)
+
+# Allow all other pushes
+sys.exit(0)

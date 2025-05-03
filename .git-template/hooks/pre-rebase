@@ -1,0 +1,30 @@
+#!/usr/bin/env python3
+
+import sys
+import subprocess
+
+# Get the commits being rebased
+upstream = sys.argv[1]
+branch = sys.argv[2] if len(sys.argv) > 2 else 'HEAD'
+
+# Check for migration files in the commits being rebased
+cmd = ['git', 'diff', '--name-only', f'{upstream}..{branch}', 'db/migrations/']
+migration_changes = subprocess.check_output(cmd).decode().strip()
+
+if not migration_changes:
+    sys.exit(0)
+
+print("\n⚠️  Warning: You are about to rebase commits containing database migrations:")
+for f in migration_changes.split('\n'):
+    print(f"    {f}")
+
+print("\nRewriting migration history can be dangerous. Make sure you:")
+print("1. Have communicated these changes to the team")
+print("2. Know the state of all environments (dev, staging, prod)")
+print("3. Have a rollback plan if needed")
+print("\nPress CTRL+C to abort, or ENTER to continue...")
+
+# Wait for user input
+input()
+
+sys.exit(0)

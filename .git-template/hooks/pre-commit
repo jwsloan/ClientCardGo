@@ -1,0 +1,88 @@
+#!/bin/sh
+
+echo "Running pre-commit checks..."
+
+# Get list of staged Go files
+STAGED_GO_FILES=$(git diff --name-only --cached --diff-filter=ACMR '*.go' | tr '\n' ' ')
+
+# Store the current stash state (only if there are unstaged changes)
+if ! git diff --quiet; then
+  STASH_NAME="pre-commit-$(date +%s)"
+  git stash save -q --keep-index "$STASH_NAME"
+else
+  STASH_NAME=""
+fi
+
+# Run gofmt
+echo "Running gofmt..."
+GOFMT_OUTPUT=$(gofmt -l -w . 2>&1)
+GOFMT_STATUS=$?
+
+if [ $GOFMT_STATUS -ne 0 ]; then
+    echo "❌ gofmt failed. Please fix formatting issues:"
+    echo "$GOFMT_OUTPUT"
+    if [ -n "$STASH_NAME" ]; then STASH_RESULT=$(git stash list | grep "$STASH_NAME"); [ -n "$STASH_RESULT" ] && git stash pop -q; fi
+    exit 1
+fi
+
+# Run golangci-lint
+echo "Running golangci-lint..."
+LINT_OUTPUT=$(golangci-lint run ./... 2>&1)
+LINT_STATUS=$?
+
+if [ $LINT_STATUS -ne 0 ]; then
+    echo "❌ golangci-lint found issues:"
+    echo "$LINT_OUTPUT"
+    if [ -n "$STASH_NAME" ]; then STASH_RESULT=$(git stash list | grep "$STASH_NAME"); [ -n "$STASH_RESULT" ] && git stash pop -q; fi
+    exit 1
+fi
+
+# Run gosec
+echo "Running gosec..."
+GOSEC_OUTPUT=$(gosec ./... 2>&1)
+GOSEC_STATUS=$?
+
+if [ $GOSEC_STATUS -ne 0 ]; then
+    echo "❌ gosec found security issues:"
+    echo "$GOSEC_OUTPUT"
+    if [ -n "$STASH_NAME" ]; then STASH_RESULT=$(git stash list | grep "$STASH_NAME"); [ -n "$STASH_RESULT" ] && git stash pop -q; fi
+    exit 1
+fi
+
+# Re-stage any Go files that might have been modified
+if [ -n "$STAGED_GO_FILES" ]; then
+  echo "Re-staging potentially modified Go files..."
+  git add $STAGED_GO_FILES
+fi
+
+# Run unit tests
+echo "Running unit tests..."
+go test ./... -v -short
+UNIT_TEST_STATUS=$?
+
+# Run integration tests
+echo "Running integration tests..."
+go test ./... -v -tags=integration
+INTEGRATION_TEST_STATUS=$?
+
+# Restore changes from stash if we stashed anything
+if [ -n "$STASH_NAME" ]; then
+    STASH_RESULT=$(git stash list | grep "$STASH_NAME")
+    if [ -n "$STASH_RESULT" ]; then
+        git stash pop -q
+    fi
+fi
+
+# Check test failures
+if [ $UNIT_TEST_STATUS -ne 0 ]; then
+    echo "❌ Unit tests failed. Please fix them and try again."
+    exit 1
+fi
+
+if [ $INTEGRATION_TEST_STATUS -ne 0 ]; then
+    echo "❌ Integration tests failed. Please fix them and try again. Be weary of timing issues and brittle assertions."
+    exit 1
+fi
+
+echo "✅ All checks passed!"
+exit 0

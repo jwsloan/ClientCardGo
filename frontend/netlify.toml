@@ -1,0 +1,14 @@
+[build]
+  publish = "."
+  command = ""  # No build command needed yet
+
+[[redirects]]
+  from = "/api/*"
+  to = "https://api.clientcard.example.com/:splat"  # We'll update this with the actual API URL later
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
