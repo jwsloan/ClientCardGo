@@ -50,6 +50,8 @@ func (h *LoginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		var redirect string
 		if user.Role == "admin" {
 			redirect = "/admin"
+		} else if !user.EULAAccepted {
+			redirect = "/eula"
 		} else if !user.InterviewComplete {
 			redirect = "/profile-interview"
 		} else {

@@ -18,6 +18,7 @@ type User struct {
 	Password          string // hashed
 	Role              string
 	InterviewComplete bool
+	EULAAccepted      bool
 	CreatedAt         time.Time
 }
 
@@ -29,39 +30,12 @@ var (
 	ErrInvalidRole     = errors.New("invalid user role")
 )
 
-var (
-	allowedRoles = map[string]struct{}{
-		"member": {},
-		"admin":  {},
-	}
-)
-	ErrInvalidRole     = errors.New("invalid user role")
-)
-
-var validRoles = map[string]struct{}{
-	"member": {},
-	"admin":  {},
-}
-	ErrInvalidRole     = errors.New("invalid user role")
-)
-
-var (
-	validRoles = map[string]struct{}{
-		"member": {},
-		"admin":  {},
-	}
-)
-	ErrInvalidRole     = errors.New("role must be 'member' or 'admin'")
-)
-
 var validRoles = map[string]struct{}{
 	"member": {},
 	"admin":  {},
 }
 
-var (
-	emailRegex = regexp.MustCompile(`^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})
-)
+var emailRegex = regexp.MustCompile(`^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})
 
 // Validate checks if the user fields are valid for signup.
 func (u *User) Validate() error {
@@ -77,24 +51,6 @@ func (u *User) Validate() error {
 	if u.Role == "" {
 		u.Role = "member"
 	}
-	if _, ok := allowedRoles[u.Role]; !ok {
-		return ErrInvalidRole
-	}
-	return nil
-}
-	if _, ok := validRoles[u.Role]; !ok {
-		return ErrInvalidRole
-	}
-	return nil
-}
-	if u.Role == "" {
-		u.Role = "member"
-	}
-	if _, ok := validRoles[u.Role]; !ok {
-		return ErrInvalidRole
-	}
-	return nil
-}
 	if _, ok := validRoles[u.Role]; !ok {
 		return ErrInvalidRole
 	}
