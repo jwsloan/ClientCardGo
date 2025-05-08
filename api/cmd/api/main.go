@@ -66,9 +66,13 @@ func main() {
 	mux.Handle("/admin/interviews", auth.RequireRole("admin", adminInterviewsHandler))
 
 	// Admin AI insights endpoint
+	openaiClient, err := llm.NewOpenAIClientFromEnv()
+	if err != nil {
+		panic("OpenAI API key not configured: " + err.Error())
+	}
 	adminAIInsightsHandler := &http.AdminAIInsightsHandler{
 		ChatRepo: /* real chat repo here */,
-		LLM:      &llm.StubLLM{},
+		LLM:      openaiClient,
 	}
 	mux.Handle("/admin/ai-insights", auth.RequireRole("admin", adminAIInsightsHandler))
 

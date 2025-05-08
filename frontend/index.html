@@ -225,38 +225,145 @@
             </div>
         </template>
         <template x-if="page === 'admin'">
-            <div class="bg-white p-8 rounded shadow-md w-full max-w-2xl" aria-labelledby="admin-title" x-data="adminInvitations()">
+            <div class="bg-white p-8 rounded shadow-md w-full max-w-6xl" aria-labelledby="admin-title" x-data="adminDashboard()">
                 <h1 id="admin-title" class="text-xl mb-4">Admin Dashboard</h1>
-                <nav>
+                <nav class="mb-3 flex gap-4">
                     <a href="#" @click.prevent="tab = 'invitations'" :class="tab === 'invitations' ? 'underline font-bold' : ''">Invitations</a>
+                    <a href="#" @click.prevent="tab = 'interviews'" :class="tab === 'interviews' ? 'underline font-bold' : ''">User Interviews</a>
+                    <a href="#" @click.prevent="tab = 'ai-insights'" :class="tab === 'ai-insights' ? 'underline font-bold' : ''">AI Insights</a>
                 </nav>
                 <template x-if="tab === 'invitations'">
                     <div class="mt-4">
                         <button @click="createInvitation" class="bg-green-600 text-white px-4 py-2 rounded mb-4">Create Invitation</button>
                         <table class="w-full border text-sm" aria-label="Invitation list">
+                            <!-- ... -->
+                        </table>
+                        <template x-if="copyMsg">
+                            <div class="mt-2 text-green-600" x-text="copyMsg"></div>
+                        </template>
+                    </div>
+                </template>
+                <template x-if="tab === 'interviews'">
+                    <div class="mt-4" x-data="adminInterviews()">
+                        <h2 class="text-lg mb-2">User Interview Sessions</h2>
+                        <table class="w-full border text-sm mb-4" aria-label="Interview sessions">
                             <thead>
                                 <tr>
-                                    <th class="border px-2 py-1">Token</th>
-                                    <th class="border px-2 py-1">Note</th>
-                                    <th class="border px-2 py-1">Status</th>
+                                    <th class="border px-2 py-1">Session ID</th>
+                                    <th class="border px-2 py-1">User ID</th>
                                     <th class="border px-2 py-1">Created</th>
-                                    <th class="border px-2 py-1">Used By</th>
+                                    <th class="border px-2 py-1">Completed</th>
+                                    <th class="border px-2 py-1">Length</th>
                                     <th class="border px-2 py-1">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <template x-for="inv in invitations" :key="inv.token">
+                                <template x-for="sess in sessions" :key="sess.id">
                                     <tr>
+                                        <td class="border px-2 py-1" x-text="sess.id"></td>
+                                        <td class="border px-2 py-1" x-text="sess.user_id"></td>
+                                        <td class="border px-2 py-1" x-text="sess.created"></td>
+                                        <td class="border px-2 py-1" x-text="sess.completed"></td>
+                                        <td class="border px-2 py-1" x-text="sess.length"></td>
                                         <td class="border px-2 py-1">
-                                            <span x-text="maskToken(inv.token)"></span>
+                                            <button @click="viewTranscript(sess.id)" class="bg-blue-500 text-white px-2 py-1 rounded text-xs" aria-label="View transcript">View</button>
                                         </td>
-                                        <td class="border px-2 py-1" x-text="inv.note"></td>
-                                        <td class="border px-2 py-1" x-text="inv.status"></td>
-                                        <td class="border px-2 py-1" x-text="inv.created_at"></td>
-                                        <td class="border px-2 py-1">
-                                            <template x-if="inv.user_name">
-                                                <span x-text="inv.user_name"></span>
-                                            </template>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                        <div class="mt-6 bg-gray-50 p-4 rounded" aria-live="polite" aria-label="Chat transcript" x-show="transcript">
+                            <div class="text-xs text-gray-500 mb-2" x-text="'Transcript for Session ' + transcript.session_id"></div>
+                            <div>
+                                <template x-for="msg in transcript.messages" :key="msg.id">
+                                    <div>
+                                        <span :class="msg.sender === 'system' ? 'font-bold text-blue-700' : 'font-bold text-green-700'" x-text="msg.sender === 'system' ? 'System:' : 'User:'"></span>
+                                        <span x-text="msg.content"></span>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+                <template x-if="tab === 'ai-insights'">
+                    <div class="mt-4" x-data="adminAIInsights()">
+                        <h2 class="text-lg mb-2">AI-Generated Insights</h2>
+                        <form @submit.prevent="generateInsights">
+                            <label class="block mb-2 font-bold">Select Sessions:</label>
+                            <div class="flex flex-col gap-2 mb-4">
+                                <template x-for="sess in allSessions" :key="sess.id">
+                                    <label>
+                                        <input type="checkbox" :value="sess.id" x-model="selectedSessions">
+                                        <span x-text="'Session ' + sess.id + ' (User: ' + sess.user_id + ', Completed: ' + sess.completed + ')'"></span>
+                                    </label>
+                                </template>
+                            </div>
+                            <button type="submit" class="bg-purple-700 text-white px-4 py-2 rounded">Generate Insights</button>
+                        </form>
+                        <div class="mt-6 p-4 bg-gray-50 rounded text-gray-800" aria-live="polite" x-show="summary.length">
+                            <div class="font-bold mb-2">AI Insights Summary:</div>
+                            <div x-text="summary"></div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </template>
+    <script>
+        function adminDashboard() {
+            return {
+                tab: 'invitations'
+            }
+        }
+        function adminInterviews() {
+            return {
+                sessions: [],
+                transcript: null,
+                async init() {
+                    const res = await fetch('/admin/interviews');
+                    if (res.ok) {
+                        this.sessions = await res.json();
+                    }
+                },
+                async viewTranscript(id) {
+                    const res = await fetch('/admin/interviews?session_id=' + encodeURIComponent(id));
+                    if (res.ok) {
+                        this.transcript = await res.json();
+                    }
+                }
+            }
+        }
+        function adminAIInsights() {
+            return {
+                allSessions: [],
+                selectedSessions: [],
+                summary: '',
+                async init() {
+                    const res = await fetch('/admin/interviews');
+                    if (res.ok) {
+                        this.allSessions = await res.json();
+                    }
+                },
+                async generateInsights() {
+                    if (!this.selectedSessions.length) {
+                        this.summary = "Please select at least one session.";
+                        return;
+                    }
+                    this.summary = "Generating AI insights…";
+                    const res = await fetch('/admin/ai-insights', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ session_ids: this.selectedSessions, prompt_type: "summary" })
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        this.summary = data.summary;
+                    } else {
+                        this.summary = "Error generating insights.";
+                    }
+                }
+            }
+        }
+    </script>
                                             <template x-if="inv.user_email">
                                                 <span class="text-gray-500 text-xs" x-text="' (' + inv.user_email + ')'"></span>
                                             </template>
