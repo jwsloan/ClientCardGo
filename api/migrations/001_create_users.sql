@@ -1,8 +1,9 @@
 -- 001_create_users.sql
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pg_uuidv7";
 
 CREATE TABLE IF NOT EXISTS users (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
     email TEXT NOT NULL UNIQUE,
     name TEXT NOT NULL,
     password TEXT NOT NULL,

@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"api/internal/domain"
-	"github.com/google/uuid"
+	gofrsuuid "github.com/gofrs/uuid/v5"
 )
 
 var (
@@ -36,9 +36,23 @@ func NewSignup(repo domain.UserRepository) *Signup {
 	return &Signup{Repo: repo}
 }
 
+// generateUUIDv7 generates a UUIDv7 string using github.com/gofrs/uuid/v5.
+func generateUUIDv7() (string, error) {
+	u7, err := gofrsuuid.NewV7()
+	if err != nil {
+		return "", err
+	}
+	return u7.String(), nil
+}
+
 func (s *Signup) Register(input SignupInput) (*SignupOutput, error) {
+	// Use UUIDv7 for user IDs (requires github.com/gofrs/uuid/v5 or similar)
+	uid, err := generateUUIDv7()
+	if err != nil {
+		return nil, err
+	}
 	user := &domain.User{
-		ID:       uuid.NewString(),
+		ID:       uid,
 		Email:    strings.TrimSpace(input.Email),
 		Name:     strings.TrimSpace(input.Name),
 		Password: input.Password, // plain, will be hashed below
