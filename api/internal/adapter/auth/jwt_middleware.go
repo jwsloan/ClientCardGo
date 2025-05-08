@@ -58,13 +58,19 @@ func ParseJWTFromRequest(r *http.Request) (string, string, error) {
 		return []byte(secret), nil
 	})
 	if err != nil || !token.Valid {
-		return "", "", err
+		return "", "", errors.New("invalid token")
 	}
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
-		return "", "", err
+		return "", "", errors.New("invalid claims")
 	}
-	userID, _ := claims["user_id"].(string)
-	role, _ := claims["role"].(string)
+	userID, ok := claims["user_id"].(string)
+	if !ok || userID == "" {
+		return "", "", errors.New("invalid user_id in token")
+	}
+	role := ""
+	if r, ok := claims["role"].(string); ok {
+		role = r
+	}
 	return userID, role, nil
 }
