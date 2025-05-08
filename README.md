@@ -168,6 +168,19 @@ Git hooks are set up to run these automatically.
 - Admins can select sessions and generate product insights summaries using an LLM (see ADR 012/013).
 - All admin features are accessible, auditable, and built with privacy in mind.
 
+### AI Insights Setup
+
+To enable AI-powered insights, set the OpenAI API key in your environment:
+
+```sh
+export OPENAI_API_KEY=sk-...
+```
+
+The backend will use this key to call OpenAI for summarizing and analyzing interview data. If not set, the insights feature will be unavailable or will return a stub response.
+
+- **Never commit API keys to version control.**
+- You can change the LLM provider by implementing the `LLMService` interface.
+
 ## Extending the API (Middleware & Features)
 
 - Add cross-cutting concerns as middleware in `internal/adapter/middleware/`
