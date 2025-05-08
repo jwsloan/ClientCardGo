@@ -33,6 +33,9 @@ func main() {
 	// Compose middleware stack
 	mux := http.NewServeMux()
 
+	// Additional route for marking chat as complete
+	mux.Handle("/chat/complete", auth.AuthMiddleware(http.HandlerFunc(chatHandler.Complete)))
+
 	// Public endpoints
 	mux.Handle("/signup", middleware.CSRFMiddleware(signupHandler))
 	mux.Handle("/login", middleware.CSRFMiddleware(loginHandler))

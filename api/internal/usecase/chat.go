@@ -42,3 +42,7 @@ func (c *Chat) ListMessages(sessionID, userID string) ([]*domain.ChatMessage, er
 	}
 	return c.Repo.ListMessages(sessionID)
 }
+
+func (c *Chat) MarkCompleted(sessionID, userID string) error {
+	return c.Repo.MarkCompleted(sessionID)
+}

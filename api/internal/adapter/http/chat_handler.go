@@ -58,3 +58,28 @@ func (h *ChatHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 	}
 }
+
+// ChatCompleteHandler marks a chat session as completed (for "Finish Interview" button).
+func (h *ChatHandler) Complete(w http.ResponseWriter, r *http.Request) {
+	userID, _, err := auth.ParseJWTFromRequest(r)
+	if err != nil || userID == "" {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	var req struct {
+		SessionID string `json:"session_id"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "invalid request", http.StatusBadRequest)
+		return
+	}
+	if err := h.UC.MarkCompleted(req.SessionID, userID); err != nil {
+		http.Error(w, "could not complete interview", http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}

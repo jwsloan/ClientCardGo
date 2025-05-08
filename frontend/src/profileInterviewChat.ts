@@ -18,12 +18,14 @@ export function profileInterviewChat() {
     transcript: '',
     supportsVoice: !!supportsSpeech,
     privacyNoticeShown: false,
+    interviewCompleted: false,
     async init() {
       const res = await fetch('/chat', { method: 'GET' });
       if (res.ok) {
         const session = await res.json();
         this.sessionId = session.id;
         this.messages = session.messages || [];
+        this.interviewCompleted = !!session.completed;
       } else {
         this.error = 'Could not start chat session.';
       }
@@ -51,6 +53,22 @@ export function profileInterviewChat() {
         this.error = 'Network error.';
       }
       (this as any).$refs.input?.focus();
+    },
+    async finishInterview() {
+      try {
+        const res = await fetch('/chat/complete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ session_id: this.sessionId })
+        });
+        if (res.ok) {
+          this.interviewCompleted = true;
+        } else {
+          this.error = 'Could not complete interview.';
+        }
+      } catch (e) {
+        this.error = 'Network error.';
+      }
     },
     startVoice() {
       if (!this.supportsVoice) {

@@ -331,7 +331,7 @@
                         </div>
                     </template>
                 </div>
-                <form class="flex flex-col gap-2 mt-2" @submit.prevent="sendMessage" autocomplete="off" aria-label="Chat input">
+                <form class="flex flex-col gap-2 mt-2" @submit.prevent="sendMessage" autocomplete="off" aria-label="Chat input" x-show="!interviewCompleted">
                     <template x-if="supportsVoice">
                         <div class="flex items-center gap-2">
                             <button type="button"
@@ -367,6 +367,16 @@
                     </template>
                     <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded w-full mt-1" aria-label="Send message">Send</button>
                 </form>
+                <div class="w-full flex justify-end mt-1" x-show="!interviewCompleted">
+                    <button type="button"
+                        class="bg-gray-700 text-white px-3 py-1 rounded focus:outline-none focus:ring"
+                        aria-label="Finish Interview"
+                        @click="finishInterview"
+                    >Finish Interview</button>
+                </div>
+                <template x-if="interviewCompleted">
+                    <div class="mt-4 bg-green-100 text-green-900 p-4 rounded text-center font-bold">Thank you! Your interview is complete.</div>
+                </template>
                 <template x-if="error">
                     <div class="text-red-600 mt-2" role="alert" x-text="error"></div>
                 </template>
