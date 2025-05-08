@@ -52,7 +52,7 @@ func ParseJWTFromRequest(r *http.Request) (string, string, error) {
 	tokenStr := cookie.Value
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
-		secret = "your-secret-key"
+		return "", "", errors.New("JWT_SECRET not set")
 	}
 	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
 		return []byte(secret), nil
