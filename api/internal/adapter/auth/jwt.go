@@ -26,9 +26,10 @@ func NewJWTGeneratorFromEnv() (*JWTGenerator, error) {
 	}, nil
 }
 
-func (j *JWTGenerator) Generate(userID string) (string, error) {
+func (j *JWTGenerator) GenerateWithRole(userID, role string) (string, error) {
 	claims := jwt.MapClaims{
 		"user_id": userID,
+		"role":    role,
 		"exp":     time.Now().Add(j.Expiry).Unix(),
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

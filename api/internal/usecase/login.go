@@ -52,7 +52,16 @@ func (l *Login) Authenticate(input LoginInput) (*LoginOutput, string, error) {
 	if err := user.CheckPassword(pw); err != nil {
 		return nil, "", ErrInvalidCredentials
 	}
-	token, err := l.Tokens.Generate(user.ID)
+	// Prefer GenerateWithRole if available
+	var token string
+	type roleCapable interface {
+		GenerateWithRole(string, string) (string, error)
+	}
+	if genWithRole, ok := l.Tokens.(roleCapable); ok {
+		token, err = genWithRole.GenerateWithRole(user.ID, user.Role)
+	} else {
+		token, err = l.Tokens.Generate(user.ID)
+	}
 	if err != nil {
 		return nil, "", err
 	}
