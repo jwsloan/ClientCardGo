@@ -253,7 +253,14 @@
                                         <td class="border px-2 py-1" x-text="inv.note"></td>
                                         <td class="border px-2 py-1" x-text="inv.status"></td>
                                         <td class="border px-2 py-1" x-text="inv.created_at"></td>
-                                        <td class="border px-2 py-1" x-text="inv.user_id || ''"></td>
+                                        <td class="border px-2 py-1">
+                                            <template x-if="inv.user_name">
+                                                <span x-text="inv.user_name"></span>
+                                            </template>
+                                            <template x-if="inv.user_email">
+                                                <span class="text-gray-500 text-xs" x-text="' (' + inv.user_email + ')'"></span>
+                                            </template>
+                                        </td>
                                         <td class="border px-2 py-1">
                                             <button @click="copySignupLink(inv.token)" class="bg-blue-500 text-white px-2 py-1 rounded text-xs" aria-label="Copy signup link">Copy Link</button>
                                         </td>
