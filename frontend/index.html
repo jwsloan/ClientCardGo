@@ -79,7 +79,7 @@
             <template x-if="isAuthenticated">
                 <li>
                     <button
-                        @click="document.cookie='session_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'; isAuthenticated=false; page='login'; $event.target.focus()"
+                        @click="logout"
                         class="text-gray-700 hover:text-blue-700 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
                         role="menuitem"
                         tabindex="0"
@@ -335,24 +335,38 @@
                     <template x-if="supportsVoice">
                         <div class="flex items-center gap-2">
                             <button type="button"
-                                class="bg-purple-600 text-white px-3 py-1 rounded"
+                                class="bg-purple-600 text-white px-3 py-1 rounded focus:outline-none focus:ring"
                                 :class="voiceActive ? 'bg-red-600' : 'bg-purple-600'"
                                 aria-label="Start voice input"
                                 @click="voiceActive ? stopVoice() : startVoice()"
                                 :aria-pressed="voiceActive"
+                                tabindex="0"
                             >
                                 <span x-text="voiceActive ? 'Stop Voice' : 'Speak'"></span>
                             </button>
                             <span class="text-sm text-gray-500">You can speak or type your response.</span>
+                            <template x-if="voiceActive">
+                                <span class="ml-2 flex items-center gap-1 text-red-600 font-bold animate-pulse" aria-live="assertive" role="status">
+                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="8"/></svg>
+                                    Recording…
+                                </span>
+                            </template>
                         </div>
                     </template>
                     <template x-if="voiceActive">
-                        <textarea
-                            x-model="transcript"
-                            class="border p-2 w-full rounded"
-                            rows="2"
-                            aria-label="Voice transcript (edit before sending)"
-                        ></textarea>
+                        <div class="flex flex-col gap-2">
+                            <textarea
+                                x-model="transcript"
+                                class="border p-2 w-full rounded"
+                                rows="2"
+                                aria-label="Voice transcript (edit before sending)"
+                            ></textarea>
+                            <button type="button"
+                                class="bg-gray-500 text-white px-2 py-1 rounded focus:outline-none focus:ring"
+                                @click="transcript = ''; stopVoice()"
+                                tabindex="0"
+                            >Retry Voice Input</button>
+                        </div>
                     </template>
                     <template x-if="!voiceActive">
                         <input x-ref="input"
@@ -375,7 +389,15 @@
                     >Finish Interview</button>
                 </div>
                 <template x-if="interviewCompleted">
-                    <div class="mt-4 bg-green-100 text-green-900 p-4 rounded text-center font-bold">Thank you! Your interview is complete.</div>
+                    <div class="mt-4 bg-green-100 text-green-900 p-4 rounded text-center font-bold flex flex-col items-center gap-3">
+                        <div>🎉 Thank you! Your interview is complete.</div>
+                        <div class="font-normal text-gray-800">You’re all set. Here’s what you can do next:</div>
+                        <div class="flex flex-col gap-2 w-full max-w-xs">
+                            <a href="/dashboard" @click.prevent="page = 'dashboard'" class="w-full bg-blue-600 text-white p-2 rounded shadow focus:outline-none focus:ring text-center" tabindex="0" role="button">Go to Dashboard</a>
+                            <a href="/user-insights" @click.prevent="page = 'user-insights'" class="w-full bg-gray-200 text-gray-900 p-2 rounded shadow focus:outline-none focus:ring text-center" tabindex="0" role="button">Explore Insights</a>
+                        </div>
+                        <div class="text-xs text-gray-500 mt-2">You can always update your profile interview later.</div>
+                    </div>
                 </template>
                 <template x-if="error">
                     <div class="text-red-600 mt-2" role="alert" x-text="error"></div>

@@ -20,6 +20,7 @@ export function profileInterviewChat() {
     privacyNoticeShown: false,
     interviewCompleted: false,
     async init() {
+      // Save/resume: fetch full chat session (messages/history and completed flag)
       const res = await fetch('/chat', { method: 'GET' });
       if (res.ok) {
         const session = await res.json();
