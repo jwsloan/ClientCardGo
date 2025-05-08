@@ -64,6 +64,16 @@ func TestSignupHandler(t *testing.T) {
 			wantInResponse: `"user_id"`,
 		},
 		{
+			name: "uuidv7 id format",
+			payload: map[string]string{
+				"email":    "uuidv7@example.com",
+				"name":     "UUID User",
+				"password": "Password1",
+			},
+			wantStatus:     http.StatusOK,
+			wantInResponse: `"user_id"`,
+		},
+		{
 			name: "duplicate email",
 			payload: map[string]string{
 				"email":    "test@example.com",
@@ -123,6 +133,16 @@ func TestSignupHandler(t *testing.T) {
 			buf := new(bytes.Buffer)
 			buf.ReadFrom(resp.Body)
 			assert.Contains(t, buf.String(), tt.wantInResponse)
+
+			// Extra: For uuidv7 id format test, check the returned user_id is a valid UUIDv7
+			if tt.name == "uuidv7 id format" && resp.StatusCode == http.StatusOK {
+				var result map[string]interface{}
+				json.Unmarshal(buf.Bytes(), &result)
+				id, _ := result["user_id"].(string)
+				// UUIDv7 starts with "0x7" (variant bits), but better to check with regex
+				// Regex for UUIDv7: 8-4-4-4-12 hex, version 7 in the 13th char
+				assert.Regexp(t, "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", id)
+			}
 		})
 	}
 }
