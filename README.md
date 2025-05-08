@@ -158,7 +158,7 @@ Git hooks are set up to run these automatically.
 
 - User stories in `docs/features/`
 - **Architecture decisions (ADRs) in `docs/decisions/`** — always check here for rationale and extension patterns
-- API documentation via Swagger at `/swagger`
+- API documentation via Swagger UI at `/docs` (loads `/openapi.yaml`)
 - Frontend component docs via Storybook
 
 ## Extending the API (Middleware & Features)

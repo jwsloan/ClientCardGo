@@ -56,6 +56,12 @@ func main() {
 	// Chat endpoint (authenticated)
 	mux.Handle("/chat", auth.AuthMiddleware(chatHandler))
 
+	// Serve Swagger UI at /docs and the OpenAPI spec at /openapi.yaml
+	swaggerDir := "./swagger-ui" // Download swagger-ui-dist to this folder
+	openapiPath := "./api/openapi.yaml"
+	mux.Handle("/docs/", http.StripPrefix("/docs", http.SwaggerUIHandler(swaggerDir, openapiPath)))
+	mux.Handle("/openapi.yaml", http.StripPrefix("/", http.SwaggerUIHandler(swaggerDir, openapiPath)))
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
