@@ -40,6 +40,14 @@
                    tabindex="0"
                    >Insights</a>
             </li>
+            <li>
+                <a href="/profile-interview"
+                   @click.prevent="page = 'profile-interview'; $event.target.focus()"
+                   class="text-gray-700 hover:text-blue-700 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                   role="menuitem"
+                   tabindex="0"
+                   >Profile Interview</a>
+            </li>
             <template x-if="userRole === 'admin'">
                 <li>
                     <a href="/admin"
@@ -199,6 +207,82 @@
                 <p>Insights coming soon.</p>
             </div>
         </template>
+        <template x-if="page === 'profile-interview'">
+            <div class="bg-white p-8 rounded shadow-md w-full max-w-md" aria-labelledby="interview-title"
+                 x-data="profileInterviewChat()">
+                <h1 id="interview-title" class="text-xl mb-4">Profile Interview</h1>
+                <div class="mb-4 text-gray-600">
+                    <span>This interview helps us understand your strengths and story. You can type or (in a future release) use your voice!</span>
+                </div>
+                <div class="flex flex-col mb-2 border h-60 overflow-y-auto bg-gray-50 p-2 rounded" aria-live="polite" aria-label="Chat history" tabindex="0">
+                    <template x-for="msg in messages" :key="msg.id">
+                        <div :class="msg.sender === 'user' ? 'text-right' : 'text-left'">
+                            <span class="inline-block px-2 py-1 rounded mb-1"
+                                  :class="msg.sender === 'user' ? 'bg-blue-100 text-blue-900' : 'bg-gray-200 text-gray-900'"
+                                  x-text="msg.content"></span>
+                        </div>
+                    </template>
+                </div>
+                <form class="flex mt-2" @submit.prevent="sendMessage" autocomplete="off" aria-label="Chat input">
+                    <input x-ref="input"
+                        x-model="input"
+                        type="text"
+                        class="border p-2 flex-1 rounded-l"
+                        placeholder="Type your message…"
+                        aria-label="Type your message"
+                        required
+                        @keydown.enter="sendMessage"
+                        />
+                    <button type="submit" class="bg-blue-600 text-white px-4 rounded-r" aria-label="Send message">Send</button>
+                </form>
+                <template x-if="error">
+                    <div class="text-red-600 mt-2" role="alert" x-text="error"></div>
+                </template>
+            </div>
+        </template>
     </main>
+    <script>
+        function profileInterviewChat() {
+            return {
+                sessionId: null,
+                messages: [],
+                input: '',
+                error: '',
+                async init() {
+                    // Start or load session
+                    const res = await fetch('/chat', {method: 'GET'});
+                    if (res.ok) {
+                        const session = await res.json();
+                        this.sessionId = session.id;
+                        this.messages = session.messages || [];
+                    } else {
+                        this.error = 'Could not start chat session.';
+                    }
+                },
+                async sendMessage() {
+                    if (!this.input) return;
+                    const msg = this.input;
+                    this.input = '';
+                    this.messages.push({ id: Math.random().toString(), sender: 'user', content: msg });
+                    try {
+                        const res = await fetch('/chat', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ session_id: this.sessionId, message: msg })
+                        });
+                        if (res.ok) {
+                            const reply = await res.json();
+                            this.messages.push(reply);
+                        } else {
+                            this.error = 'Could not send message.';
+                        }
+                    } catch (e) {
+                        this.error = 'Network error.';
+                    }
+                    this.$refs.input.focus();
+                }
+            }
+        }
+    </script>
 </body>
 </html>
