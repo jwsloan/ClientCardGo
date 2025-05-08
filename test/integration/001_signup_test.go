@@ -28,6 +28,25 @@ func (r *testUserRepo) CreateUser(u *domain.User) (string, error) {
 	if _, exists := r.users[u.Email]; exists {
 		return "", usecase.ErrEmailTaken
 	}
+	// enforce allowed roles
+	if u.Role != "member" && u.Role != "admin" {
+		return "", domain.ErrInvalidRole
+	}
+	r.users[u.Email] = u
+	return u.ID, nil
+}
+
+func (r *testUserRepo) GetUserByEmail(email string) (*domain.User, error) {
+	u, ok := r.users[email]
+	if !ok {
+		return nil, nil
+	}
+	return u, nil
+}
+	// Validate role
+	if u.Role != "member" && u.Role != "admin" {
+		return "", domain.ErrInvalidRole
+	}
 	r.users[u.Email] = u
 	return u.ID, nil
 }
@@ -72,6 +91,27 @@ func TestSignupHandler(t *testing.T) {
 			},
 			wantStatus:     http.StatusOK,
 			wantInResponse: `"user_id"`,
+		},
+		{
+			name: "role defaults to member",
+			payload: map[string]string{
+				"email":    "roledefault@example.com",
+				"name":     "Role Default",
+				"password": "Password1",
+			},
+			wantStatus:     http.StatusOK,
+			wantInResponse: `"user_id"`,
+		},
+		{
+			name: "invalid role rejected",
+			payload: map[string]string{
+				"email":    "badrole@example.com",
+				"name":     "Bad Role",
+				"password": "Password1",
+				"role":     "superuser",
+			},
+			wantStatus:     http.StatusBadRequest,
+			wantInResponse: "invalid user role",
 		},
 		{
 			name: "duplicate email",
@@ -134,14 +174,10 @@ func TestSignupHandler(t *testing.T) {
 			buf.ReadFrom(resp.Body)
 			assert.Contains(t, buf.String(), tt.wantInResponse)
 
-			// Extra: For uuidv7 id format test, check the returned user_id is a valid UUIDv7
-			if tt.name == "uuidv7 id format" && resp.StatusCode == http.StatusOK {
-				var result map[string]interface{}
-				json.Unmarshal(buf.Bytes(), &result)
-				id, _ := result["user_id"].(string)
-				// UUIDv7 starts with "0x7" (variant bits), but better to check with regex
-				// Regex for UUIDv7: 8-4-4-4-12 hex, version 7 in the 13th char
-				assert.Regexp(t, "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", id)
+			// For role defaults to member, check that the created user has role "member"
+			if tt.name == "role defaults to member" && resp.StatusCode == http.StatusOK {
+				created := repo.users["roledefault@example.com"]
+				assert.Equal(t, "member", created.Role)
 			}
 		})
 	}

@@ -56,6 +56,7 @@ func (s *Signup) Register(input SignupInput) (*SignupOutput, error) {
 		Email:    strings.TrimSpace(input.Email),
 		Name:     strings.TrimSpace(input.Name),
 		Password: input.Password, // plain, will be hashed below
+		Role:     "member",
 		CreatedAt: time.Now().UTC(),
 	}
 

@@ -16,6 +16,7 @@ type User struct {
 	Email     string
 	Name      string
 	Password  string // hashed
+	Role      string
 	CreatedAt time.Time
 }
 
@@ -24,7 +25,38 @@ var (
 	ErrInvalidEmail    = errors.New("invalid email address")
 	ErrWeakPassword    = errors.New("password does not meet strength requirements")
 	ErrNameRequired    = errors.New("name is required")
+	ErrInvalidRole     = errors.New("invalid user role")
 )
+
+var (
+	allowedRoles = map[string]struct{}{
+		"member": {},
+		"admin":  {},
+	}
+)
+	ErrInvalidRole     = errors.New("invalid user role")
+)
+
+var validRoles = map[string]struct{}{
+	"member": {},
+	"admin":  {},
+}
+	ErrInvalidRole     = errors.New("invalid user role")
+)
+
+var (
+	validRoles = map[string]struct{}{
+		"member": {},
+		"admin":  {},
+	}
+)
+	ErrInvalidRole     = errors.New("role must be 'member' or 'admin'")
+)
+
+var validRoles = map[string]struct{}{
+	"member": {},
+	"admin":  {},
+}
 
 var (
 	emailRegex = regexp.MustCompile(`^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})
@@ -40,6 +72,30 @@ func (u *User) Validate() error {
 	}
 	if err := validatePassword(u.Password); err != nil {
 		return err
+	}
+	if u.Role == "" {
+		u.Role = "member"
+	}
+	if _, ok := allowedRoles[u.Role]; !ok {
+		return ErrInvalidRole
+	}
+	return nil
+}
+	if _, ok := validRoles[u.Role]; !ok {
+		return ErrInvalidRole
+	}
+	return nil
+}
+	if u.Role == "" {
+		u.Role = "member"
+	}
+	if _, ok := validRoles[u.Role]; !ok {
+		return ErrInvalidRole
+	}
+	return nil
+}
+	if _, ok := validRoles[u.Role]; !ok {
+		return ErrInvalidRole
 	}
 	return nil
 }
