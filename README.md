@@ -55,7 +55,7 @@ ENV=development
    go run cmd/api/main.go
    ```
 
-### Frontend (Alpine.js)
+### Frontend (Alpine.js, TypeScript, Storybook)
 
 1. Install dependencies:
    ```bash
@@ -66,6 +66,12 @@ ENV=development
 2. Start development server:
    ```bash
    npm run dev
+   ```
+
+3. Build TypeScript and run Storybook:
+   ```bash
+   npm run build        # or tsc
+   npm run storybook    # starts Storybook for UI prototyping
    ```
 
 ## Testing

@@ -241,48 +241,10 @@
             </div>
         </template>
     </main>
-    <script>
-        function profileInterviewChat() {
-            return {
-                sessionId: null,
-                messages: [],
-                input: '',
-                error: '',
-                async init() {
-                    // Start or load session
-                    const res = await fetch('/chat', {method: 'GET'});
-                    if (res.ok) {
-                        const session = await res.json();
-                        this.sessionId = session.id;
-                        this.messages = session.messages || [];
-                    } else {
-                        this.error = 'Could not start chat session.';
-                    }
-                },
-                async sendMessage() {
-                    if (!this.input) return;
-                    const msg = this.input;
-                    this.input = '';
-                    this.messages.push({ id: Math.random().toString(), sender: 'user', content: msg });
-                    try {
-                        const res = await fetch('/chat', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ session_id: this.sessionId, message: msg })
-                        });
-                        if (res.ok) {
-                            const reply = await res.json();
-                            this.messages.push(reply);
-                        } else {
-                            this.error = 'Could not send message.';
-                        }
-                    } catch (e) {
-                        this.error = 'Network error.';
-                    }
-                    this.$refs.input.focus();
-                }
-            }
-        }
+    <script type="module">
+        import { profileInterviewChat } from './src/profileInterviewChat.js';
+        // Make the TS Alpine.js logic globally available
+        window.profileInterviewChat = profileInterviewChat;
     </script>
 </body>
 </html>
