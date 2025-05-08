@@ -7,6 +7,7 @@ export const ListAndTranscript = () => {
   container.innerHTML = `
     <div class="bg-white p-8 rounded shadow-md w-full max-w-2xl" aria-labelledby="interview-admin-title">
       <h1 id="interview-admin-title" class="text-xl mb-4">User Interview Sessions</h1>
+      <p class="mb-2 text-gray-600 text-sm">Admins can review anonymized user interviews to guide product decisions. All access is logged for privacy.</p>
       <table class="w-full border text-sm mb-4" aria-label="Interview sessions">
         <thead>
           <tr>
