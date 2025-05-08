@@ -8,98 +8,175 @@
     <title>ClientCard – Auth</title>
     <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 </head>
-<body class="min-h-screen flex flex-col items-center justify-center bg-gray-100">
+<body class="min-h-screen flex flex-col items-center justify-center bg-gray-100" x-data="{
+    ...$data,
+    isAuthenticated: false,
+    userRole: '',
+    checkAuth() {
+        // Simple simulation: check for session_token cookie. In reality, use an API call.
+        this.isAuthenticated = document.cookie.includes('session_token');
+        // For admin, set userRole = 'admin'; else '' (simulate for now)
+        this.userRole = this.isAuthenticated ? (document.cookie.includes('role=admin') ? 'admin' : '') : '';
+    }
+}" x-init="checkAuth()">
 
-    <template x-if="page === 'login'">
-        <form 
-            @submit.prevent="async function() {
-                message = '';
-                const resp = await fetch('/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email: $refs.email.value, password: $refs.password.value })
-                });
-                if (resp.ok) {
-                    const data = await resp.json();
-                    message = data.message;
-                    userName = $refs.email.value;
-                    window.location.href = data.redirect;
-                } else {
-                    message = 'Invalid email or password.';
-                }
-            }()"
-            class="bg-white p-8 rounded shadow-md w-full max-w-md"
-            aria-labelledby="login-title"
-        >
-            <h1 id="login-title" class="text-xl mb-4">Login</h1>
-            <div>
-                <label for="login-email" class="block">Email</label>
-                <input x-ref="email" id="login-email" name="email" type="email" required autocomplete="email"
-                    class="border p-2 w-full" aria-required="true" data-testid="email">
-            </div>
-            <div class="mt-4">
-                <label for="login-password" class="block">Password</label>
-                <input x-ref="password" id="login-password" name="password" type="password" required autocomplete="current-password"
-                    class="border p-2 w-full" aria-required="true" data-testid="password">
-            </div>
-            <button type="submit" class="mt-6 w-full bg-blue-600 text-white p-2 rounded" data-testid="submit">
-                Log In
-            </button>
-            <template x-if="message">
-                <div class="mt-2 text-red-600" role="alert" x-text="message"></div>
+    <!-- Navigation Bar -->
+    <nav class="w-full bg-white border-b mb-8 shadow">
+        <ul class="flex justify-center space-x-6 py-4" role="menubar">
+            <li>
+                <a href="/dashboard" @click.prevent="page = 'dashboard'" class="text-gray-700 hover:text-blue-700 font-bold" role="menuitem" tabindex="0">
+                    Dashboard
+                </a>
+            </li>
+            <li>
+                <a href="/user-insights" @click.prevent="page = 'user-insights'" class="text-gray-700 hover:text-blue-700 font-bold" role="menuitem" tabindex="0">
+                    Insights
+                </a>
+            </li>
+            <template x-if="userRole === 'admin'">
+                <li>
+                    <a href="/admin" @click.prevent="page = 'admin'" class="text-gray-700 hover:text-blue-700 font-bold" role="menuitem" tabindex="0">
+                        Admin
+                    </a>
+                </li>
             </template>
-            <div class="mt-4">
-                <a href="/signup" @click.prevent="page = 'signup'" class="underline text-blue-600">Need an account? Sign up</a>
-            </div>
-        </form>
-    </template>
+            <template x-if="!isAuthenticated">
+                <li>
+                    <a href="/login" @click.prevent="page = 'login'" class="text-gray-700 hover:text-blue-700 font-bold" role="menuitem" tabindex="0">
+                        Login
+                    </a>
+                </li>
+                <li>
+                    <a href="/signup" @click.prevent="page = 'signup'" class="text-gray-700 hover:text-blue-700 font-bold" role="menuitem" tabindex="0">
+                        Sign Up
+                    </a>
+                </li>
+            </template>
+            <template x-if="isAuthenticated">
+                <li>
+                    <button @click="document.cookie='session_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'; isAuthenticated=false; page='login';" class="text-gray-700 hover:text-blue-700 font-bold" role="menuitem" tabindex="0">
+                        Log Out
+                    </button>
+                </li>
+            </template>
+        </ul>
+    </nav>
 
-    <template x-if="page === 'signup'">
-        <form 
-            @submit.prevent="async function() {
-                message = '';
-                const resp = await fetch('/signup', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email: $refs.su_email.value, name: $refs.su_name.value, password: $refs.su_password.value })
-                });
-                if (resp.ok) {
-                    const data = await resp.json();
-                    message = 'Welcome, ' + data.name + '! Your account is created.';
-                    page = 'login';
-                } else {
-                    message = await resp.text();
-                }
-            }()"
-            class="bg-white p-8 rounded shadow-md w-full max-w-md"
-            aria-labelledby="signup-title"
-        >
-            <h1 id="signup-title" class="text-xl mb-4">Sign Up</h1>
-            <div>
-                <label for="signup-email" class="block">Email</label>
-                <input x-ref="su_email" id="signup-email" name="email" type="email" required autocomplete="email"
-                    class="border p-2 w-full" aria-required="true" data-testid="email">
+    <main class="flex flex-col items-center justify-center flex-1 w-full">
+        <template x-if="page === 'login'">
+            <!-- login form as before -->
+            <form 
+                @submit.prevent="async function() {
+                    message = '';
+                    const resp = await fetch('/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: $refs.email.value, password: $refs.password.value })
+                    });
+                    if (resp.ok) {
+                        const data = await resp.json();
+                        message = data.message;
+                        userName = $refs.email.value;
+                        isAuthenticated = true;
+                        window.location.href = data.redirect;
+                    } else {
+                        message = 'Invalid email or password.';
+                    }
+                }()"
+                class="bg-white p-8 rounded shadow-md w-full max-w-md"
+                aria-labelledby="login-title"
+            >
+                <h1 id="login-title" class="text-xl mb-4">Login</h1>
+                <div>
+                    <label for="login-email" class="block">Email</label>
+                    <input x-ref="email" id="login-email" name="email" type="email" required autocomplete="email"
+                        class="border p-2 w-full" aria-required="true" data-testid="email">
+                </div>
+                <div class="mt-4">
+                    <label for="login-password" class="block">Password</label>
+                    <input x-ref="password" id="login-password" name="password" type="password" required autocomplete="current-password"
+                        class="border p-2 w-full" aria-required="true" data-testid="password">
+                </div>
+                <button type="submit" class="mt-6 w-full bg-blue-600 text-white p-2 rounded" data-testid="submit">
+                    Log In
+                </button>
+                <template x-if="message">
+                    <div class="mt-2 text-red-600" role="alert" x-text="message"></div>
+                </template>
+                <div class="mt-4">
+                    <a href="/signup" @click.prevent="page = 'signup'" class="underline text-blue-600">Need an account? Sign up</a>
+                </div>
+            </form>
+        </template>
+
+        <template x-if="page === 'signup'">
+            <!-- signup form as before -->
+            <form 
+                @submit.prevent="async function() {
+                    message = '';
+                    const resp = await fetch('/signup', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: $refs.su_email.value, name: $refs.su_name.value, password: $refs.su_password.value })
+                    });
+                    if (resp.ok) {
+                        const data = await resp.json();
+                        message = 'Welcome, ' + data.name + '! Your account is created.';
+                        page = 'login';
+                    } else {
+                        message = await resp.text();
+                    }
+                }()"
+                class="bg-white p-8 rounded shadow-md w-full max-w-md"
+                aria-labelledby="signup-title"
+            >
+                <h1 id="signup-title" class="text-xl mb-4">Sign Up</h1>
+                <div>
+                    <label for="signup-email" class="block">Email</label>
+                    <input x-ref="su_email" id="signup-email" name="email" type="email" required autocomplete="email"
+                        class="border p-2 w-full" aria-required="true" data-testid="email">
+                </div>
+                <div class="mt-4">
+                    <label for="signup-name" class="block">Name</label>
+                    <input x-ref="su_name" id="signup-name" name="name" type="text" required
+                        class="border p-2 w-full" aria-required="true" data-testid="name">
+                </div>
+                <div class="mt-4">
+                    <label for="signup-password" class="block">Password</label>
+                    <input x-ref="su_password" id="signup-password" name="password" type="password" required autocomplete="new-password"
+                        class="border p-2 w-full" aria-required="true" data-testid="password">
+                </div>
+                <button type="submit" class="mt-6 w-full bg-green-600 text-white p-2 rounded" data-testid="submit">
+                    Sign Up
+                </button>
+                <template x-if="message">
+                    <div class="mt-2 text-red-600" role="alert" x-text="message"></div>
+                </template>
+                <div class="mt-4">
+                    <a href="/login" @click.prevent="page = 'login'" class="underline text-blue-600">Already have an account? Log in</a>
+                </div>
+            </form>
+        </template>
+
+        <!-- Placeholder templates for dashboard, admin, insights, etc. -->
+        <template x-if="page === 'dashboard'">
+            <div class="bg-white p-8 rounded shadow-md w-full max-w-md" aria-labelledby="dashboard-title">
+                <h1 id="dashboard-title" class="text-xl mb-4">Dashboard</h1>
+                <p>Welcome to your dashboard.</p>
             </div>
-            <div class="mt-4">
-                <label for="signup-name" class="block">Name</label>
-                <input x-ref="su_name" id="signup-name" name="name" type="text" required
-                    class="border p-2 w-full" aria-required="true" data-testid="name">
+        </template>
+        <template x-if="page === 'admin'">
+            <div class="bg-white p-8 rounded shadow-md w-full max-w-md" aria-labelledby="admin-title">
+                <h1 id="admin-title" class="text-xl mb-4">Admin Dashboard</h1>
+                <p>Admin features coming soon.</p>
             </div>
-            <div class="mt-4">
-                <label for="signup-password" class="block">Password</label>
-                <input x-ref="su_password" id="signup-password" name="password" type="password" required autocomplete="new-password"
-                    class="border p-2 w-full" aria-required="true" data-testid="password">
+        </template>
+        <template x-if="page === 'user-insights'">
+            <div class="bg-white p-8 rounded shadow-md w-full max-w-md" aria-labelledby="insights-title">
+                <h1 id="insights-title" class="text-xl mb-4">User Insights</h1>
+                <p>Insights coming soon.</p>
             </div>
-            <button type="submit" class="mt-6 w-full bg-green-600 text-white p-2 rounded" data-testid="submit">
-                Sign Up
-            </button>
-            <template x-if="message">
-                <div class="mt-2 text-red-600" role="alert" x-text="message"></div>
-            </template>
-            <div class="mt-4">
-                <a href="/login" @click.prevent="page = 'login'" class="underline text-blue-600">Already have an account? Log in</a>
-            </div>
-        </form>
-    </template>
+        </template>
+    </main>
 </body>
 </html>
