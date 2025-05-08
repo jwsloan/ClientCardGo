@@ -14,9 +14,10 @@ type SignupHandler struct {
 }
 
 type signupRequest struct {
-	Email    string `json:"email"`
-	Name     string `json:"name"`
-	Password string `json:"password"`
+	Email           string `json:"email"`
+	Name            string `json:"name"`
+	Password        string `json:"password"`
+	InvitationToken string `json:"invitation_token"`
 }
 
 type signupResponse struct {
@@ -42,15 +43,22 @@ func (h *SignupHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	out, err := h.SignupUC.Register(r.Context(), usecase.SignupInput{
-		Email:    req.Email,
-		Name:     req.Name,
-		Password: req.Password,
+		Email:           req.Email,
+		Name:            req.Name,
+		Password:        req.Password,
+		InvitationToken: req.InvitationToken,
 	})
 	if err != nil {
 		log.Error().Err(err).Msg("signup failed")
 		switch err {
 		case usecase.ErrEmailTaken:
 			http.Error(w, "email already registered", http.StatusConflict)
+		case domain.ErrInvalidToken:
+			http.Error(w, "invalid invitation token", http.StatusBadRequest)
+		case domain.ErrTokenUsed:
+			http.Error(w, "invitation token already used", http.StatusBadRequest)
+		case domain.ErrTokenExpired:
+			http.Error(w, "invitation token expired", http.StatusBadRequest)
 		default:
 			http.Error(w, "signup failed", http.StatusBadRequest)
 		}

@@ -20,6 +20,48 @@ type testUserRepo struct {
 	users map[string]*domain.User
 }
 
+type testInvitationRepo struct {
+	invites map[string]*domain.Invitation
+}
+
+func newTestInvitationRepo() *testInvitationRepo {
+	return &testInvitationRepo{
+		invites: map[string]*domain.Invitation{
+			"INVITE1": {
+				Token:  "INVITE1",
+				Status: domain.InvitationUnused,
+			},
+			"USED123": {
+				Token:  "USED123",
+				Status: domain.InvitationUsed,
+			},
+		},
+	}
+}
+
+func (r *testInvitationRepo) FindByToken(token string) (*domain.Invitation, error) {
+	inv, ok := r.invites[token]
+	if !ok {
+		return nil, nil
+	}
+	return inv, nil
+}
+
+func (r *testInvitationRepo) MarkUsed(token, userID string) error {
+	inv, ok := r.invites[token]
+	if !ok {
+		return domain.ErrInvalidToken
+	}
+	if inv.Status == domain.InvitationUsed {
+		return domain.ErrTokenUsed
+	}
+	now := time.Now()
+	inv.Status = domain.InvitationUsed
+	inv.UsedAt = &now
+	inv.UserID = &userID
+	return nil
+}
+
 func newTestUserRepo() *testUserRepo {
 	return &testUserRepo{users: map[string]*domain.User{}}
 }
@@ -60,8 +102,9 @@ func (r *testUserRepo) GetUserByEmail(email string) (*domain.User, error) {
 }
 
 func TestSignupHandler(t *testing.T) {
-	repo := newTestUserRepo()
-	signupUC := usecase.NewSignup(repo)
+	userRepo := newTestUserRepo()
+	inviteRepo := newTestInvitationRepo()
+	signupUC := usecase.NewSignup(userRepo, inviteRepo)
 	handler := &http.SignupHandler{SignupUC: signupUC}
 	server := httptest.NewServer(handler)
 	defer server.Close()
@@ -73,14 +116,47 @@ func TestSignupHandler(t *testing.T) {
 		wantInResponse string
 	}{
 		{
-			name: "valid signup",
+			name: "valid signup with token",
 			payload: map[string]string{
 				"email":    "test@example.com",
 				"name":     "Test User",
 				"password": "Password1",
+				"invitation_token": "INVITE1",
 			},
 			wantStatus:     http.StatusOK,
 			wantInResponse: `"user_id"`,
+		},
+		{
+			name: "missing invitation token",
+			payload: map[string]string{
+				"email":    "notoken@example.com",
+				"name":     "No Token",
+				"password": "Password1",
+			},
+			wantStatus:     http.StatusBadRequest,
+			wantInResponse: "invalid invitation token",
+		},
+		{
+			name: "invalid invitation token",
+			payload: map[string]string{
+				"email":    "badtoken@example.com",
+				"name":     "Bad Token",
+				"password": "Password1",
+				"invitation_token": "NOTAREALTOKEN",
+			},
+			wantStatus:     http.StatusBadRequest,
+			wantInResponse: "invalid invitation token",
+		},
+		{
+			name: "already used token",
+			payload: map[string]string{
+				"email":    "usedtoken@example.com",
+				"name":     "Used Token",
+				"password": "Password1",
+				"invitation_token": "USED123",
+			},
+			wantStatus:     http.StatusBadRequest,
+			wantInResponse: "invitation token already used",
 		},
 		{
 			name: "uuidv7 id format",

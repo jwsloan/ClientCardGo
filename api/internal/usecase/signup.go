@@ -29,11 +29,12 @@ type SignupOutput struct {
 
 // Signup handles user registration.
 type Signup struct {
-	Repo domain.UserRepository
+	Repo        domain.UserRepository
+	Invitations domain.InvitationRepository
 }
 
-func NewSignup(repo domain.UserRepository) *Signup {
-	return &Signup{Repo: repo}
+func NewSignup(repo domain.UserRepository, invitations domain.InvitationRepository) *Signup {
+	return &Signup{Repo: repo, Invitations: invitations}
 }
 
 // generateUUIDv7 generates a UUIDv7 string using github.com/gofrs/uuid/v5.
@@ -51,6 +52,21 @@ import (
 )
 
 func (s *Signup) Register(ctx context.Context, input SignupInput) (*SignupOutput, error) {
+	if input.InvitationToken == "" {
+		return nil, domain.ErrInvalidToken
+	}
+	// Validate invitation token (case-sensitive, unused)
+	inv, err := s.Invitations.FindByToken(input.InvitationToken)
+	if err != nil || inv == nil {
+		return nil, domain.ErrInvalidToken
+	}
+	if inv.Status == domain.InvitationUsed {
+		return nil, domain.ErrTokenUsed
+	}
+	if inv.Status == domain.InvitationExpired {
+		return nil, domain.ErrTokenExpired
+	}
+
 	uid, err := generateUUIDv7()
 	if err != nil {
 		return nil, fmt.Errorf("could not generate user ID: %w", err)
@@ -82,6 +98,11 @@ func (s *Signup) Register(ctx context.Context, input SignupInput) (*SignupOutput
 
 	if _, err := s.Repo.CreateUser(user); err != nil {
 		return nil, fmt.Errorf("could not create user: %w", err)
+	}
+
+	// Mark invitation used, associate with user
+	if err := s.Invitations.MarkUsed(inv.Token, user.ID); err != nil {
+		return nil, fmt.Errorf("could not mark invitation as used: %w", err)
 	}
 
 	return &SignupOutput{
