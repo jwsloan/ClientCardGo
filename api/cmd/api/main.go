@@ -37,8 +37,12 @@ func main() {
 	mux.Handle("/chat/complete", auth.AuthMiddleware(http.HandlerFunc(chatHandler.Complete)))
 
 	// Public endpoints
-	mux.Handle("/signup", middleware.CSRFMiddleware(signupHandler))
-	mux.Handle("/login", middleware.CSRFMiddleware(loginHandler))
+	// Rate limit and CSRF protect sensitive endpoints
+	signupProtected := middleware.RateLimiter(5, 1*60)(middleware.CSRFMiddleware(signupHandler)) // 5 req/min
+	loginProtected := middleware.RateLimiter(10, 1*60)(middleware.CSRFMiddleware(loginHandler))  // 10 req/min
+
+	mux.Handle("/signup", signupProtected)
+	mux.Handle("/login", loginProtected)
 
 	// Authenticated endpoints
 	authenticated := middleware.Logging(
@@ -59,11 +63,7 @@ func main() {
 	// Chat endpoint (authenticated)
 	mux.Handle("/chat", auth.AuthMiddleware(chatHandler))
 
-	// Serve Swagger UI at /docs and the OpenAPI spec at /openapi.yaml
-	swaggerDir := "./swagger-ui" // Download swagger-ui-dist to this folder
-	openapiPath := "./api/openapi.yaml"
-	mux.Handle("/docs/", http.StripPrefix("/docs", http.SwaggerUIHandler(swaggerDir, openapiPath)))
-	mux.Handle("/openapi.yaml", http.StripPrefix("/", http.SwaggerUIHandler(swaggerDir, openapiPath)))
+	// [REMOVED] Swagger UI and OpenAPI endpoints are not served in production for security reasons.
 
 	port := os.Getenv("PORT")
 	if port == "" {

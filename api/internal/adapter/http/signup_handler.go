@@ -43,10 +43,10 @@ func (h *SignupHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	out, err := h.SignupUC.Register(r.Context(), usecase.SignupInput{
-		Email:           req.Email,
-		Name:            req.Name,
+		Email:           template.HTMLEscapeString(req.Email),
+		Name:            template.HTMLEscapeString(req.Name),
 		Password:        req.Password,
-		InvitationToken: req.InvitationToken,
+		InvitationToken: template.HTMLEscapeString(req.InvitationToken),
 	})
 	if err != nil {
 		log.Error().Err(err).Msg("signup failed")
@@ -66,13 +66,12 @@ func (h *SignupHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := signupResponse{
-		UserID: out.UserID,
-		Name:   out.Name,
+		UserID: template.HTMLEscapeString(out.UserID),
+		Name:   template.HTMLEscapeString(out.Name),
 	}
 	w.Header().Set("Content-Type", "application/json")
-	// After signup, user always needs to complete interview (unless admin, but signup is not for admin)
 	json.NewEncoder(w).Encode(map[string]string{
 		"redirect": "/profile-interview",
-		"message":  "Welcome, " + out.Name + "! Please complete your profile interview.",
+		"message":  "Welcome, " + resp.Name + "! Please complete your profile interview.",
 	})
 }

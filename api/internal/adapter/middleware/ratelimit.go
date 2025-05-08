@@ -14,12 +14,20 @@ type rateLimiter struct {
 	window    time.Duration
 }
 
-func NewRateLimiter(limit int, window time.Duration) *rateLimiter {
-	return &rateLimiter{
-		visitors: make(map[string]time.Time),
+func RateLimiter(limit int, windowSeconds int) func(http.Handler) http.Handler {
+	rl := &rateLimiter{
+		visitors: make(map[string][]time.Time),
 		limit:    limit,
-		window:   window,
+		window:   time.Duration(windowSeconds) * time.Second,
 	}
+	return rl.Middleware
+}
+
+type rateLimiter struct {
+	mu       sync.Mutex
+	visitors map[string][]time.Time
+	limit    int
+	window   time.Duration
 }
 
 func (rl *rateLimiter) Middleware(next http.Handler) http.Handler {
@@ -27,20 +35,20 @@ func (rl *rateLimiter) Middleware(next http.Handler) http.Handler {
 		ip := r.RemoteAddr
 		now := time.Now()
 		rl.mu.Lock()
-		count := 0
-		for k, t := range rl.visitors {
-			if now.Sub(t) > rl.window {
-				delete(rl.visitors, k)
-			} else if k == ip {
-				count++
+		times := rl.visitors[ip]
+		// Filter out timestamps outside the window
+		valid := []time.Time{}
+		for _, t := range times {
+			if now.Sub(t) < rl.window {
+				valid = append(valid, t)
 			}
 		}
-		if count >= rl.limit {
+		if len(valid) >= rl.limit {
 			rl.mu.Unlock()
 			http.Error(w, "rate limit exceeded", http.StatusTooManyRequests)
 			return
 		}
-		rl.visitors[ip] = now
+		rl.visitors[ip] = append(valid, now)
 		rl.mu.Unlock()
 		next.ServeHTTP(w, r)
 	})
