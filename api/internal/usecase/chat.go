@@ -44,5 +44,21 @@ func (c *Chat) ListMessages(sessionID, userID string) ([]*domain.ChatMessage, er
 }
 
 func (c *Chat) MarkCompleted(sessionID, userID string) error {
-	return c.Repo.MarkCompleted(sessionID)
+	// Mark chat session as complete in repo
+	if err := c.Repo.MarkCompleted(sessionID); err != nil {
+		return err
+	}
+	// Mark user profile as complete
+	if c.RepoUser != nil {
+		session, err := c.Repo.GetSession(sessionID, userID)
+		if err == nil && session != nil {
+			_ = c.RepoUser.SetInterviewComplete(userID, true)
+		}
+	}
+	return nil
+}
+
+// SetUserRepository allows dependency injection for updating user profile.
+func (c *Chat) SetUserRepository(userRepo domain.UserRepository) {
+	c.RepoUser = userRepo
 }

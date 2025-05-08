@@ -29,7 +29,7 @@ func (h *LoginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "invalid request body", http.StatusBadRequest)
 			return
 		}
-		out, token, err := h.LoginUC.Authenticate(usecase.LoginInput{
+		out, user, token, err := h.LoginUC.AuthenticateFull(usecase.LoginInput{
 			Email:    req.Email,
 			Password: req.Password,
 		})
@@ -46,8 +46,17 @@ func (h *LoginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			SameSite: http.SameSiteStrictMode,
 		})
 		w.Header().Set("Content-Type", "application/json")
+		// Logic for where to send the user next
+		var redirect string
+		if user.Role == "admin" {
+			redirect = "/admin"
+		} else if !user.InterviewComplete {
+			redirect = "/profile-interview"
+		} else {
+			redirect = "/dashboard"
+		}
 		json.NewEncoder(w).Encode(map[string]string{
-			"redirect": "/dashboard",
+			"redirect": redirect,
 			"message":  "Welcome back, " + out.Name + "!",
 		})
 	default:

@@ -70,5 +70,9 @@ func (h *SignupHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		Name:   out.Name,
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(resp)
+	// After signup, user always needs to complete interview (unless admin, but signup is not for admin)
+	json.NewEncoder(w).Encode(map[string]string{
+		"redirect": "/profile-interview",
+		"message":  "Welcome, " + out.Name + "! Please complete your profile interview.",
+	})
 }

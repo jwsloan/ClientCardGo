@@ -70,3 +70,33 @@ func (l *Login) Authenticate(input LoginInput) (*LoginOutput, string, error) {
 		Name:   user.Name,
 	}, token, nil
 }
+
+// AuthenticateFull returns the LoginOutput, user entity, and token (for control flow/redirects).
+func (l *Login) AuthenticateFull(input LoginInput) (*LoginOutput, *domain.User, string, error) {
+	email := strings.TrimSpace(input.Email)
+	pw := input.Password
+
+	user, err := l.Repo.GetUserByEmail(email)
+	if err != nil || user == nil {
+		return nil, nil, "", ErrInvalidCredentials
+	}
+	if err := user.CheckPassword(pw); err != nil {
+		return nil, nil, "", ErrInvalidCredentials
+	}
+	var token string
+	type roleCapable interface {
+		GenerateWithRole(string, string) (string, error)
+	}
+	if genWithRole, ok := l.Tokens.(roleCapable); ok {
+		token, err = genWithRole.GenerateWithRole(user.ID, user.Role)
+	} else {
+		token, err = l.Tokens.Generate(user.ID)
+	}
+	if err != nil {
+		return nil, nil, "", err
+	}
+	return &LoginOutput{
+		UserID: user.ID,
+		Name:   user.Name,
+	}, user, token, nil
+}

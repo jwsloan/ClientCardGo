@@ -12,12 +12,13 @@ import (
 
 // User represents a client or contractor account.
 type User struct {
-	ID        string
-	Email     string
-	Name      string
-	Password  string // hashed
-	Role      string
-	CreatedAt time.Time
+	ID                string
+	Email             string
+	Name              string
+	Password          string // hashed
+	Role              string
+	InterviewComplete bool
+	CreatedAt         time.Time
 }
 
 // User validation errors
