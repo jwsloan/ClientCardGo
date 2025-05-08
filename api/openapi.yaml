@@ -1,0 +1,47 @@
+openapi: 3.0.3
+info:
+  title: ClientCard API
+  version: 1.0.0
+paths:
+  /admin/invitations:
+    get:
+      summary: List all invitations with user details (admin only)
+      tags: [admin, invitations]
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: List of invitations with usage info
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    token:
+                      type: string
+                    note:
+                      type: string
+                    status:
+                      type: string
+                      enum: [unused, used, expired]
+                    created_at:
+                      type: string
+                      format: date-time
+                    used_at:
+                      type: string
+                      format: date-time
+                      nullable: true
+                    user_name:
+                      type: string
+                      nullable: true
+                    user_email:
+                      type: string
+                      nullable: true
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: session_token

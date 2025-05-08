@@ -50,7 +50,8 @@ func main() {
 
 	// Admin-only endpoints
 	mux.Handle("/admin", auth.RequireRole("admin", adminHandler))
-	mux.Handle("/admin/invitations", auth.RequireRole("admin", /* invitation handler */ http.NotFoundHandler()))
+	adminInvitationsHandler := &http.AdminInvitationsHandler{Invitations: /* real repo here */}
+	mux.Handle("/admin/invitations", auth.RequireRole("admin", adminInvitationsHandler))
 
 	// Chat endpoint (authenticated)
 	mux.Handle("/chat", auth.AuthMiddleware(chatHandler))
