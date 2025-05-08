@@ -18,6 +18,7 @@ type User struct {
 	Password          string // hashed
 	Role              string
 	InterviewComplete bool
+	EULAAccepted      bool
 	CreatedAt         time.Time
 }
 
@@ -27,31 +28,6 @@ var (
 	ErrWeakPassword    = errors.New("password does not meet strength requirements")
 	ErrNameRequired    = errors.New("name is required")
 	ErrInvalidRole     = errors.New("invalid user role")
-)
-
-var (
-	allowedRoles = map[string]struct{}{
-		"member": {},
-		"admin":  {},
-	}
-)
-	ErrInvalidRole     = errors.New("invalid user role")
-)
-
-var validRoles = map[string]struct{}{
-	"member": {},
-	"admin":  {},
-}
-	ErrInvalidRole     = errors.New("invalid user role")
-)
-
-var (
-	validRoles = map[string]struct{}{
-		"member": {},
-		"admin":  {},
-	}
-)
-	ErrInvalidRole     = errors.New("role must be 'member' or 'admin'")
 )
 
 var validRoles = map[string]struct{}{
@@ -77,24 +53,6 @@ func (u *User) Validate() error {
 	if u.Role == "" {
 		u.Role = "member"
 	}
-	if _, ok := allowedRoles[u.Role]; !ok {
-		return ErrInvalidRole
-	}
-	return nil
-}
-	if _, ok := validRoles[u.Role]; !ok {
-		return ErrInvalidRole
-	}
-	return nil
-}
-	if u.Role == "" {
-		u.Role = "member"
-	}
-	if _, ok := validRoles[u.Role]; !ok {
-		return ErrInvalidRole
-	}
-	return nil
-}
 	if _, ok := validRoles[u.Role]; !ok {
 		return ErrInvalidRole
 	}
