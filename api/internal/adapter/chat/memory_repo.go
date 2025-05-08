@@ -26,15 +26,23 @@ func (r *InMemoryChatRepo) CreateSession(userID string) (*domain.ChatSession, er
 	r.Lock()
 	defer r.Unlock()
 	id, _ := uuid.NewV7()
+	introMsg := &domain.ChatMessage{
+		ID:        uuid.Must(uuid.NewV7()).String(),
+		SessionID: id.String(),
+		Sender:    "system",
+		Content:   "👋 Welcome to your profile interview! You can answer by typing or using your voice. This conversation will help us understand your skills, experience, and goals so we can better support you. You can edit any response before sending. Everything you share is private and you’re in control—voice input is optional. Ready to get started? Tell me a bit about yourself or your work!",
+		CreatedAt: time.Now().UTC(),
+	}
 	session := &domain.ChatSession{
 		ID:        id.String(),
 		UserID:    userID,
 		CreatedAt: time.Now().UTC(),
 		UpdatedAt: time.Now().UTC(),
 		Completed: false,
-		Messages:  []*domain.ChatMessage{},
+		Messages:  []*domain.ChatMessage{introMsg},
 	}
 	r.sessions[session.ID] = session
+	r.messages[session.ID] = []*domain.ChatMessage{introMsg}
 	return session, nil
 }
 
