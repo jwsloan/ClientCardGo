@@ -45,39 +45,43 @@ func generateUUIDv7() (string, error) {
 	return u7.String(), nil
 }
 
-func (s *Signup) Register(input SignupInput) (*SignupOutput, error) {
-	// Use UUIDv7 for user IDs (requires github.com/gofrs/uuid/v5 or similar)
+import (
+	"context"
+	"fmt"
+)
+
+func (s *Signup) Register(ctx context.Context, input SignupInput) (*SignupOutput, error) {
 	uid, err := generateUUIDv7()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not generate user ID: %w", err)
 	}
 	user := &domain.User{
 		ID:       uid,
 		Email:    strings.TrimSpace(input.Email),
 		Name:     strings.TrimSpace(input.Name),
-		Password: input.Password, // plain, will be hashed below
+		Password: input.Password,
 		Role:     "member",
 		CreatedAt: time.Now().UTC(),
 	}
 
 	if err := user.Validate(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("validation failed: %w", err)
 	}
 
 	existing, err := s.Repo.GetUserByEmail(user.Email)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not check for existing user: %w", err)
 	}
 	if existing != nil {
 		return nil, ErrEmailTaken
 	}
 
 	if err := user.HashPassword(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not hash password: %w", err)
 	}
 
 	if _, err := s.Repo.CreateUser(user); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not create user: %w", err)
 	}
 
 	return &SignupOutput{

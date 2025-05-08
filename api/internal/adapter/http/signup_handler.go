@@ -24,6 +24,11 @@ type signupResponse struct {
 	Name   string `json:"name"`
 }
 
+import (
+	"github.com/rs/zerolog/log"
+	"context"
+)
+
 func (h *SignupHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -36,17 +41,18 @@ func (h *SignupHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	out, err := h.SignupUC.Register(usecase.SignupInput{
+	out, err := h.SignupUC.Register(r.Context(), usecase.SignupInput{
 		Email:    req.Email,
 		Name:     req.Name,
 		Password: req.Password,
 	})
 	if err != nil {
+		log.Error().Err(err).Msg("signup failed")
 		switch err {
 		case usecase.ErrEmailTaken:
 			http.Error(w, "email already registered", http.StatusConflict)
 		default:
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(w, "signup failed", http.StatusBadRequest)
 		}
 		return
 	}
