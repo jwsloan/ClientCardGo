@@ -4,19 +4,27 @@
 **I want** to associate each user with a role  
 **So that** I can control access to features and functionality based on user permissions
 
-## Acceptance Criteria
-- Each user has a role, defaulting to `member` on signup.
-- Supported roles: `member` (default) and `admin`.
-- Roles are validated and stored in the DB, never exposed in public URLs.
-- Admins always see the admin dashboard, never the interview/onboarding.
-- Strong access control: all admin-only features are protected by middleware and role checks.
+## User Story
 
-## Security & Usability
-- Invalid roles are rejected.
-- No role-changing UI exists yet; only admins can update in DB.
-- All role logic is auditable and tested.
+**As** a user with different responsibilities  
+**I want** the platform to give me access only to features that match my role  
+**So that** I see only what’s relevant, and sensitive actions are protected
 
-## Test Scenarios
-- [ ] User created → role is `member`.
-- [ ] Admin created → role is `admin`, never shown onboarding.
-- [ ] Invalid role rejected.
+## Outcomes & Experience
+
+- Users see only the features and areas of the product appropriate to their role (e.g., admin, member).
+- Admin-only features are never visible or accessible to regular users.
+- Users feel confident that sensitive actions are protected.
+
+## Success Criteria
+
+- No user can access features outside their role.
+- The system is auditable, and permission issues are rare.
+
+---
+
+### Implementation Suggestions
+
+- Store user roles in the database and enforce them in access control middleware.
+- Default role is `member`; admins are set manually or via invite.
+- Never expose role info in URLs or client-side code.

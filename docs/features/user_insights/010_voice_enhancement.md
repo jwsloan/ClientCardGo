@@ -3,33 +3,33 @@
 ## User Story
 As a professional on the go, I want to complete my profile interview by speaking naturally, so that I can share my story more efficiently and expressively.
 
-## Acceptance Criteria
+## User Story
 
-### Seamless Voice Integration & Feedback
-- Users can switch between typing and speaking at any moment in the interview.
-- Voice input shows a clear live recording indicator (color change, icon, or waveform).
-- Users see and can edit the transcript before sending, and have a "Retry/Clear" option.
-- System handles background noise gracefully; user can retry if needed.
+**As** a busy professional  
+**I want** to use my voice to complete onboarding when convenient  
+**So that** I can share my story efficiently, with full control and privacy
 
-### Mobile-First & Accessibility
-- All controls are large, touch-friendly, and can be used one-handed on a phone.
-- All controls are ARIA-labeled, keyboard/focus accessible, and announce feedback/errors via ARIA live regions.
-- Voice input is progressively enhanced; if unsupported, user is notified and can type.
+## Outcomes & Experience
 
-### Privacy and Control
-- Privacy notice is shown before enabling microphone.
-- Voice is transcribed in-browser only, never sent until user submits.
-- User can disable or stop voice input at any time, and always control when to finish the interview.
+- Users can start, pause, and stop voice input at any time, always seeing a clear indicator when recording.
+- Voice input is accurate, editable before sending, and users can retry or clear if needed.
+- The interface is touch-friendly, accessible, and works great on mobile devices.
+- Privacy is respected; users are informed before recording, and voice is never sent until they choose.
 
-### Save/Resume
-- If user leaves mid-interview, their progress is saved and resumed on return.
+## Success Criteria
 
-## Test Scenarios
-- [ ] User uses voice input, sees live indicator, can retry, and can edit transcript before sending.
-- [ ] User can complete entire interview on mobile without issue.
-- [ ] All dynamic controls are accessible, ARIA-labeled, and focus-visible.
-- [ ] Privacy notice is shown before first voice use.
-- [ ] Save/resume works for interrupted interviews.
+- Users use voice input with confidence and control.
+- Mobile and accessibility needs are always met.
+- Privacy is never compromised.
+
+---
+
+### Implementation Suggestions
+
+- Use the Web Speech API or similar for in-browser transcription.
+- Show a clear recording indicator and retry/clear controls.
+- Announce errors and feedback via ARIA live.
+- Save/resume progress in backend.
 
 ## User Scenarios
 

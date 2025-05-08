@@ -3,43 +3,36 @@
 ## User Story
 As a busy professional completing my profile, I want to have a natural conversation about my experience and skills, so that I can share my story in a way that feels authentic and effortless.
 
-## Acceptance Criteria
+## User Story
 
-### Natural Interaction & Usability
-- Users can choose to speak or type responses at any time; switching is seamless.
-- The conversation flows naturally, starting with an AI system intro message explaining the process, privacy, and what to expect.
-- Users can see/edit their transcript before sending, and retry/clear voice input if needed.
-- Users can always skip or edit any question, and see a progress indicator (“Step X of Y”).
-- After interview completion, users see a “You’re all set!” onboarding screen with next steps.
+**As** a new user  
+**I want** to complete my onboarding interview in a way that feels natural, private, and accessible  
+**So that** I can share my experience and needs efficiently, using the input mode that works best for me
 
-### Save & Resume
-- If a user leaves mid-interview, their chat history is saved. On return, the interview resumes where they left off.
+## Outcomes & Experience
 
-### Accessibility & Mobile
-- All controls are ARIA-labeled, keyboard/focus accessible, and large enough for mobile touch.
-- Dynamic chat, error, and success messages use ARIA live regions.
-- Voice input is progressively enhanced, with clear recording indicators and fallbacks for unsupported browsers.
-- All flows are fully usable on mobile.
+- Users can interact with an onboarding chat using either voice or typing, switching at any time.
+- The interview starts with a friendly system message that explains the process, privacy, and how to participate.
+- Users always control when to finish, and can review or edit their responses before sending.
+- The system saves progress automatically; if a user leaves, they can resume later from where they stopped.
+- The experience is fully accessible (screen reader, keyboard, mobile) and respects privacy and consent around voice input.
+- After completion, users see a “You’re all set!” screen with clear next steps.
 
-### Security
-- All endpoints require authentication; session is managed via HttpOnly, Secure cookies.
-- CSRF protection is enforced for all state-changing actions.
-- Rate limiting and CORS are enabled on API endpoints.
+## Success Criteria
 
-### Privacy
-- Users are shown a privacy notice before enabling voice input.
-- Voice is transcribed in-browser only; nothing is sent server-side until sent by user.
-- Users control when to finish the interview at any time.
-- All data is handled per best practices; admins cannot see/interview end-user content.
+- Users report high satisfaction and confidence in onboarding.
+- No user is blocked by device or ability.
+- Privacy, accessibility, and user control are never compromised.
 
-## Test Scenarios
-- [ ] On first login, non-admin user is redirected to `/profile-interview` unless already completed.
-- [ ] User can speak or type responses, with live transcription and editing.
-- [ ] “Finish Interview” button marks session complete, sets flag in profile, and shows onboarding.
-- [ ] If user leaves and returns, chat resumes at last state.
-- [ ] Admins never see or are redirected to the interview.
-- [ ] All controls are accessible and mobile-friendly.
-- [ ] All error/success feedback is ARIA-live and visually distinct.
+---
+
+### Implementation Suggestions
+
+- Use a chat UI with progressive enhancement for voice (Web Speech API or similar).
+- Save chat history in the backend; resume as needed.
+- Show a live recording indicator and allow retry/clear for voice input.
+- Use ARIA live regions for all dynamic feedback.
+- After completion, show onboarding with links to dashboard/features.
 
 ## User Scenarios
 
