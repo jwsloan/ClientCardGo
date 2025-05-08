@@ -331,18 +331,48 @@
                         </div>
                     </template>
                 </div>
-                <form class="flex mt-2" @submit.prevent="sendMessage" autocomplete="off" aria-label="Chat input">
-                    <input x-ref="input"
-                        x-model="input"
-                        type="text"
-                        class="border p-2 flex-1 rounded-l"
-                        placeholder="Type your message…"
-                        aria-label="Type your message"
-                        required
-                        @keydown.enter="sendMessage"
+                <form class="flex flex-col gap-2 mt-2" @submit.prevent="sendMessage" autocomplete="off" aria-label="Chat input">
+                    <template x-if="supportsVoice">
+                        <div class="flex items-center gap-2">
+                            <button type="button"
+                                class="bg-purple-600 text-white px-3 py-1 rounded"
+                                :class="voiceActive ? 'bg-red-600' : 'bg-purple-600'"
+                                aria-label="Start voice input"
+                                @click="voiceActive ? stopVoice() : startVoice()"
+                                :aria-pressed="voiceActive"
+                            >
+                                <span x-text="voiceActive ? 'Stop Voice' : 'Speak'"></span>
+                            </button>
+                            <span class="text-sm text-gray-500">You can speak or type your response.</span>
+                        </div>
+                    </template>
+                    <template x-if="voiceActive">
+                        <textarea
+                            x-model="transcript"
+                            class="border p-2 w-full rounded"
+                            rows="2"
+                            aria-label="Voice transcript (edit before sending)"
+                        ></textarea>
+                    </template>
+                    <template x-if="!voiceActive">
+                        <input x-ref="input"
+                            x-model="input"
+                            type="text"
+                            class="border p-2 w-full rounded"
+                            placeholder="Type your message…"
+                            aria-label="Type your message"
+                            required
+                            @keydown.enter="sendMessage"
                         />
-                    <button type="submit" class="bg-blue-600 text-white px-4 rounded-r" aria-label="Send message">Send</button>
+                    </template>
+                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded w-full mt-1" aria-label="Send message">Send</button>
                 </form>
+                <template x-if="error">
+                    <div class="text-red-600 mt-2" role="alert" x-text="error"></div>
+                </template>
+                <template x-if="!supportsVoice">
+                    <div class="text-xs text-gray-500 mt-2">Voice input is not supported in your browser or device. You can always type your response.</div>
+                </template>
                 <template x-if="error">
                     <div class="text-red-600 mt-2" role="alert" x-text="error"></div>
                 </template>
