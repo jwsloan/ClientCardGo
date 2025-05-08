@@ -65,6 +65,13 @@ func main() {
 	}
 	mux.Handle("/admin/interviews", auth.RequireRole("admin", adminInterviewsHandler))
 
+	// Admin AI insights endpoint
+	adminAIInsightsHandler := &http.AdminAIInsightsHandler{
+		ChatRepo: /* real chat repo here */,
+		LLM:      &llm.StubLLM{},
+	}
+	mux.Handle("/admin/ai-insights", auth.RequireRole("admin", adminAIInsightsHandler))
+
 	// Chat endpoint (authenticated)
 	mux.Handle("/chat", auth.AuthMiddleware(chatHandler))
 
