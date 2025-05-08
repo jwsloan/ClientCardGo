@@ -10,8 +10,10 @@ import (
 )
 
 func TestAdminDashboardAccess(t *testing.T) {
-	handler := &http.AdminHandler{}
-	server := httptest.NewServer(handler)
+	// Compose middleware: AuthMiddleware -> RequireRole("admin") -> AdminHandler
+	adminHandler := &http.AdminHandler{}
+	wrapped := auth.RequireRole("admin", auth.AuthMiddleware(adminHandler))
+	server := httptest.NewServer(wrapped)
 	defer server.Close()
 
 	jar, _ := cookiejar.New(nil)
