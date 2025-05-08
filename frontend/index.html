@@ -140,14 +140,32 @@
         </template>
 
         <template x-if="page === 'signup'">
-            <!-- signup form as before -->
+            <!-- signup form as before, now with invitation token -->
             <form 
+                x-data="{
+                    ...$data,
+                    invitationToken: '',
+                    init() {
+                        // Prefill invitationToken from query param
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const tokenParam = urlParams.get('invitation');
+                        if (tokenParam) {
+                            this.invitationToken = tokenParam;
+                        }
+                    }
+                }"
+                x-init="init()"
                 @submit.prevent="async function() {
                     message = '';
                     const resp = await fetch('/signup', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email: $refs.su_email.value, name: $refs.su_name.value, password: $refs.su_password.value })
+                        body: JSON.stringify({ 
+                            email: $refs.su_email.value, 
+                            name: $refs.su_name.value, 
+                            password: $refs.su_password.value, 
+                            invitation_token: invitationToken 
+                        })
                     });
                     if (resp.ok) {
                         const data = await resp.json();
@@ -175,6 +193,17 @@
                     <label for="signup-password" class="block">Password</label>
                     <input x-ref="su_password" id="signup-password" name="password" type="password" required autocomplete="new-password"
                         class="border p-2 w-full" aria-required="true" data-testid="password">
+                </div>
+                <div class="mt-4">
+                    <label for="signup-invitation" class="block">Invitation Token</label>
+                    <input id="signup-invitation" name="invitation_token" type="text" required
+                        class="border p-2 w-full" 
+                        aria-required="true" 
+                        data-testid="invitation-token"
+                        x-model="invitationToken"
+                        autocomplete="off"
+                    >
+                    <span class="text-xs text-gray-500">Ask your admin for your invitation link or token.</span>
                 </div>
                 <button type="submit" class="mt-6 w-full bg-green-600 text-white p-2 rounded" data-testid="submit">
                     Sign Up
