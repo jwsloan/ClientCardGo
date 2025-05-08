@@ -59,6 +59,11 @@ func main() {
 	mux.Handle("/admin", auth.RequireRole("admin", adminHandler))
 	adminInvitationsHandler := &http.AdminInvitationsHandler{Invitations: /* real repo here */}
 	mux.Handle("/admin/invitations", auth.RequireRole("admin", adminInvitationsHandler))
+	adminInterviewsHandler := &http.AdminInterviewsHandler{
+		ChatRepo: /* real chat repo here */,
+		UserRepo: /* real user repo here */,
+	}
+	mux.Handle("/admin/interviews", auth.RequireRole("admin", adminInterviewsHandler))
 
 	// Chat endpoint (authenticated)
 	mux.Handle("/chat", auth.AuthMiddleware(chatHandler))
