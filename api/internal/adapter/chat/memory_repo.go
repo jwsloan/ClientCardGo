@@ -22,6 +22,8 @@ func NewInMemoryChatRepo() *InMemoryChatRepo {
 	}
 }
 
+var profileInterviewIntroPrompt = loadPrompt("profile_interview_intro")
+
 func (r *InMemoryChatRepo) CreateSession(userID string) (*domain.ChatSession, error) {
 	r.Lock()
 	defer r.Unlock()
@@ -30,7 +32,7 @@ func (r *InMemoryChatRepo) CreateSession(userID string) (*domain.ChatSession, er
 		ID:        uuid.Must(uuid.NewV7()).String(),
 		SessionID: id.String(),
 		Sender:    "system",
-		Content:   "👋 Welcome to your profile interview! You can answer by typing or using your voice. This conversation will help us understand your skills, experience, and goals so we can better support you. You can edit any response before sending. Everything you share is private and you’re in control—voice input is optional. Ready to get started? Tell me a bit about yourself or your work!",
+		Content:   profileInterviewIntroPrompt,
 		CreatedAt: time.Now().UTC(),
 	}
 	session := &domain.ChatSession{
@@ -45,6 +47,27 @@ func (r *InMemoryChatRepo) CreateSession(userID string) (*domain.ChatSession, er
 	r.messages[session.ID] = []*domain.ChatMessage{introMsg}
 	return session, nil
 }
+
+// loadPrompt loads a prompt from prompts.yaml with a fallback.
+func loadPrompt(key string) string {
+	type promptsMap map[string]string
+	f, err := os.Open("api/prompts.yaml")
+	if err != nil {
+		return defaultIntroPrompt
+	}
+	defer f.Close()
+	var prompts promptsMap
+	decoder := yaml.NewDecoder(f)
+	if err := decoder.Decode(&prompts); err != nil {
+		return defaultIntroPrompt
+	}
+	if prompt, ok := prompts[key]; ok && prompt != "" {
+		return prompt
+	}
+	return defaultIntroPrompt
+}
+
+const defaultIntroPrompt = "👋 Welcome to your profile interview! You can answer by typing or using your voice. This conversation will help us understand your skills, experience, and goals so we can better support you. You can edit any response before sending. Everything you share is private and you’re in control—voice input is optional. Ready to get started? Tell me a bit about yourself or your work!"
 
 func (r *InMemoryChatRepo) GetSession(sessionID, userID string) (*domain.ChatSession, error) {
 	r.Lock()
