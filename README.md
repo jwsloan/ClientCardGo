@@ -17,7 +17,7 @@ TBD
 
 ### Environment Variables
 
-Copy `.env.example` to `.env` and configure:
+Copy `.env.example` to `.env` and configure **all secrets via environment variables**:
 
 ```bash
 # Database
@@ -27,7 +27,7 @@ DB_NAME=clientcard
 DB_USER=postgres
 DB_PASSWORD=postgres
 
-# JWT
+# JWT (must never be hardcoded in code or config)
 JWT_SECRET=your-secret-key
 JWT_EXPIRY=24h
 
@@ -35,6 +35,7 @@ JWT_EXPIRY=24h
 PORT=8080
 ENV=development
 ```
+> **Note:** Secrets (DB_PASSWORD, JWT_SECRET, etc.) are always loaded from environment variables. Never commit secrets to code or config files.
 
 ### Backend (Go API)
 
