@@ -5,11 +5,14 @@
 **So that** I can manage users and invitations without exposing those tools to regular users
 
 ## Acceptance Criteria
-- There is a `/admin` route accessible only to users with the `admin` role.
-- Non-admin users attempting to access `/admin` are redirected to the main dashboard with an error message.
-- The admin dashboard page can be a simple "Welcome, Admin" placeholder for now.
+- `/admin` is accessible only to users with the `admin` role (middleware enforced).
+- Non-admins are redirected to `/dashboard` with a clear error.
+- Admins see user/invitation management features; never see onboarding/interview.
+- All controls are ARIA-labeled, focus-visible, and touch-friendly.
+- Invitation management is searchable, filterable, and allows copying signup links.
+- All actions are CSRF-protected and audited.
 
 ## Test Scenarios
-- [ ] Admin user can successfully access `/admin`.
-- [ ] Non-admin user is prevented from accessing `/admin` and redirected.
-- [ ] The `/admin` page loads successfully when accessed by an admin.
+- [ ] Admin can access `/admin`, manage invitations, and see used/unused status.
+- [ ] Non-admins are blocked from `/admin`.
+- [ ] All controls are accessible and mobile-friendly.

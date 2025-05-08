@@ -5,17 +5,18 @@
 **So that** I can control access to features and functionality based on user permissions
 
 ## Acceptance Criteria
-- Each user has a **role** assigned, defaulting to `member` when they sign up.
-- Supported roles are:
-  - `member`: regular contractor user
-  - `admin`: elevated permissions for managing users, invites, etc.
-- The user's role must be stored in the database and retrievable.
-- There must be no UI yet for changing roles (handled manually for now).
-- The role should **not** be exposed directly in the visible user interface yet (kept internal for now).
-- Future access control logic should be able to rely on this field.
+- Each user has a role, defaulting to `member` on signup.
+- Supported roles: `member` (default) and `admin`.
+- Roles are validated and stored in the DB, never exposed in public URLs.
+- Admins always see the admin dashboard, never the interview/onboarding.
+- Strong access control: all admin-only features are protected by middleware and role checks.
+
+## Security & Usability
+- Invalid roles are rejected.
+- No role-changing UI exists yet; only admins can update in DB.
+- All role logic is auditable and tested.
 
 ## Test Scenarios
-- [ ] Upon user creation, the user is automatically assigned the `member` role.
-- [ ] It must be possible to manually update a user’s role to `admin` in the database.
-- [ ] System can differentiate between a `member` and `admin` user based on their role.
-- [ ] Invalid or unknown roles must not be accepted (validation present).
+- [ ] User created → role is `member`.
+- [ ] Admin created → role is `admin`, never shown onboarding.
+- [ ] Invalid role rejected.

@@ -4,6 +4,23 @@
 As a potential client or contractor, I want to create my own ClientCard account so that I can start building my professional profile and connect with others.
 
 ## Acceptance Criteria
+- Users can register with email, name, and strong password (min 8 chars, uppercase, lowercase, digit).
+- Password is securely hashed (bcrypt).
+- Email is unique, required, and validated.
+- A valid invitation token is required for signup (see invitation stories).
+- Signup form is accessible (ARIA labels, focus management), keyboard navigable, and mobile-friendly.
+- CSRF protection and secure cookie/session handling enforced.
+- After signup:
+  - If user is admin (rare), redirect to admin dashboard.
+  - If not, redirect to AI-powered profile interview unless already completed.
+- All error messages are clear, ARIA-live, and persist long enough to be read.
+- Security: Rate limiting, CORS, and input validation on backend.
+
+## Test Scenarios
+- [ ] User registers with valid info and token → success, redirected to profile interview.
+- [ ] User registers with invalid/used/no token → error shown, no account created.
+- [ ] Duplicate email → error shown, no account created.
+- [ ] All form fields are accessible by screen reader and keyboard.
 
 ### Easy and Secure Signup
 - I can quickly create an account using my email address

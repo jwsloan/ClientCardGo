@@ -5,25 +5,41 @@ As a busy professional completing my profile, I want to have a natural conversat
 
 ## Acceptance Criteria
 
-### Natural Interaction
-- I can choose to speak or type my responses based on my situation
-- The conversation flows naturally, like talking to a colleague
-- I can easily correct or adjust my responses
+### Natural Interaction & Usability
+- Users can choose to speak or type responses at any time; switching is seamless.
+- The conversation flows naturally, starting with an AI system intro message explaining the process, privacy, and what to expect.
+- Users can see/edit their transcript before sending, and retry/clear voice input if needed.
+- Users can always skip or edit any question, and see a progress indicator (“Step X of Y”).
+- After interview completion, users see a “You’re all set!” onboarding screen with next steps.
 
-### Seamless Mobile Experience
-- I can complete my profile while commuting or between meetings
-- Voice input works smoothly on my phone
-- I can switch between typing and speaking as needed
+### Save & Resume
+- If a user leaves mid-interview, their chat history is saved. On return, the interview resumes where they left off.
 
-### Accessibility and Privacy
-- I'm clearly informed about voice features and privacy
-- I can fully participate using only text if I prefer
-- The experience is consistent regardless of my input choice
+### Accessibility & Mobile
+- All controls are ARIA-labeled, keyboard/focus accessible, and large enough for mobile touch.
+- Dynamic chat, error, and success messages use ARIA live regions.
+- Voice input is progressively enhanced, with clear recording indicators and fallbacks for unsupported browsers.
+- All flows are fully usable on mobile.
 
-### Thoughtful Guidance
-- The interview helps me highlight my key strengths
-- Questions adapt based on my previous answers
-- I receive gentle prompts if I'm unsure what to share
+### Security
+- All endpoints require authentication; session is managed via HttpOnly, Secure cookies.
+- CSRF protection is enforced for all state-changing actions.
+- Rate limiting and CORS are enabled on API endpoints.
+
+### Privacy
+- Users are shown a privacy notice before enabling voice input.
+- Voice is transcribed in-browser only; nothing is sent server-side until sent by user.
+- Users control when to finish the interview at any time.
+- All data is handled per best practices; admins cannot see/interview end-user content.
+
+## Test Scenarios
+- [ ] On first login, non-admin user is redirected to `/profile-interview` unless already completed.
+- [ ] User can speak or type responses, with live transcription and editing.
+- [ ] “Finish Interview” button marks session complete, sets flag in profile, and shows onboarding.
+- [ ] If user leaves and returns, chat resumes at last state.
+- [ ] Admins never see or are redirected to the interview.
+- [ ] All controls are accessible and mobile-friendly.
+- [ ] All error/success feedback is ARIA-live and visually distinct.
 
 ## User Scenarios
 

@@ -5,6 +5,18 @@
 **So that** I can access my dashboard and past ratings  
 
 ## Acceptance Criteria
+- Users can log in with email and password.
+- Invalid credentials show a clear, accessible error (ARIA-live).
+- Successful login redirects:
+    - Admins → admin dashboard.
+    - Non-admins → profile interview if not completed, else dashboard.
+- Login form is accessible (ARIA, keyboard/focus), mobile-friendly, and secure.
+- Security: Rate limiting, CORS, CSRF protected, secure cookies.
+
+## Test Scenarios
+- [ ] Valid credentials → correct redirect by role/interview status.
+- [ ] Invalid credentials → error shown, no login.
+- [ ] All controls are accessible and mobile-usable.
 - GET /login shows an email/password form.
 - Submitting blank fields shows inline validation errors.
 - Submitting bad credentials shows “Invalid email or password.”
