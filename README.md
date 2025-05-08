@@ -160,11 +160,12 @@ Git hooks are set up to run these automatically.
 - **Architecture decisions (ADRs) in `docs/decisions/`** — always check here for rationale and extension patterns
 - Frontend component docs via Storybook
 
-## Admin Interview Insights
+## Admin Interview Insights & AI Analysis
 
 - Admins can securely browse and review anonymized user interview conversations from the admin dashboard.
 - Only admins can access these endpoints; all access is logged for privacy.
-- Interview transcripts are available for review, search, and generating actionable insights (see ADR 012, story 012/013).
+- Interview transcripts are available for review, search, and actionable AI-powered analysis.
+- Admins can select sessions and generate product insights summaries using an LLM (see ADR 012/013).
 - All admin features are accessible, auditable, and built with privacy in mind.
 
 ## Extending the API (Middleware & Features)
