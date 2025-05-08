@@ -157,9 +157,16 @@ Git hooks are set up to run these automatically.
 ## Documentation
 
 - User stories in `docs/features/`
-- Architecture decisions in `docs/decisions/`
+- **Architecture decisions (ADRs) in `docs/decisions/`** — always check here for rationale and extension patterns
 - API documentation via Swagger at `/swagger`
 - Frontend component docs via Storybook
+
+## Extending the API (Middleware & Features)
+
+- Add cross-cutting concerns as middleware in `internal/adapter/middleware/`
+- Compose middleware in `cmd/api/main.go` (see ADR 005)
+- New features: create domain/usecase/adapter layers and integration tests
+- Document all major design and security decisions as new ADRs
 
 ## Contributing
 
