@@ -21,7 +21,7 @@ type Invitation struct {
 	Status    InvitationStatus
 	CreatedAt time.Time
 	UsedAt    *time.Time
-	UserID    *string // who used the token, if any
+	UserID    *string // UUID of the user who claimed the token, if any
 }
 
 var (

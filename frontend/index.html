@@ -225,11 +225,83 @@
             </div>
         </template>
         <template x-if="page === 'admin'">
-            <div class="bg-white p-8 rounded shadow-md w-full max-w-md" aria-labelledby="admin-title">
+            <div class="bg-white p-8 rounded shadow-md w-full max-w-2xl" aria-labelledby="admin-title" x-data="adminInvitations()">
                 <h1 id="admin-title" class="text-xl mb-4">Admin Dashboard</h1>
-                <p>Admin features coming soon.</p>
+                <nav>
+                    <a href="#" @click.prevent="tab = 'invitations'" :class="tab === 'invitations' ? 'underline font-bold' : ''">Invitations</a>
+                </nav>
+                <template x-if="tab === 'invitations'">
+                    <div class="mt-4">
+                        <button @click="createInvitation" class="bg-green-600 text-white px-4 py-2 rounded mb-4">Create Invitation</button>
+                        <table class="w-full border text-sm" aria-label="Invitation list">
+                            <thead>
+                                <tr>
+                                    <th class="border px-2 py-1">Token</th>
+                                    <th class="border px-2 py-1">Note</th>
+                                    <th class="border px-2 py-1">Status</th>
+                                    <th class="border px-2 py-1">Created</th>
+                                    <th class="border px-2 py-1">Used By</th>
+                                    <th class="border px-2 py-1">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template x-for="inv in invitations" :key="inv.token">
+                                    <tr>
+                                        <td class="border px-2 py-1">
+                                            <span x-text="maskToken(inv.token)"></span>
+                                        </td>
+                                        <td class="border px-2 py-1" x-text="inv.note"></td>
+                                        <td class="border px-2 py-1" x-text="inv.status"></td>
+                                        <td class="border px-2 py-1" x-text="inv.created_at"></td>
+                                        <td class="border px-2 py-1" x-text="inv.user_id || ''"></td>
+                                        <td class="border px-2 py-1">
+                                            <button @click="copySignupLink(inv.token)" class="bg-blue-500 text-white px-2 py-1 rounded text-xs" aria-label="Copy signup link">Copy Link</button>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                        <template x-if="copyMsg">
+                            <div class="mt-2 text-green-600" x-text="copyMsg"></div>
+                        </template>
+                    </div>
+                </template>
             </div>
         </template>
+    <script>
+        function adminInvitations() {
+            return {
+                tab: 'invitations',
+                invitations: [],
+                copyMsg: '',
+                async init() {
+                    await this.fetchInvitations();
+                },
+                async fetchInvitations() {
+                    const res = await fetch('/admin/invitations');
+                    if (res.ok) {
+                        this.invitations = await res.json();
+                    }
+                },
+                async createInvitation() {
+                    const res = await fetch('/admin/invitations', { method: 'POST' });
+                    if (res.ok) {
+                        await this.fetchInvitations();
+                    }
+                },
+                maskToken(token) {
+                    if (!token) return '';
+                    return token.slice(0, 4) + '••••' + token.slice(-2);
+                },
+                async copySignupLink(token) {
+                    const url = `${window.location.origin}/signup?invitation=${encodeURIComponent(token)}`;
+                    await navigator.clipboard.writeText(url);
+                    this.copyMsg = 'Signup link copied!';
+                    setTimeout(() => { this.copyMsg = ''; }, 2000);
+                }
+            }
+        }
+    </script>
         <template x-if="page === 'user-insights'">
             <div class="bg-white p-8 rounded shadow-md w-full max-w-md" aria-labelledby="insights-title">
                 <h1 id="insights-title" class="text-xl mb-4">User Insights</h1>

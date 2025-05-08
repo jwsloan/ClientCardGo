@@ -6,7 +6,8 @@ CREATE TABLE IF NOT EXISTS invitations (
     note TEXT,
     status TEXT NOT NULL CHECK (status IN ('unused', 'used', 'expired')),
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
-    used_at TIMESTAMP WITH TIME ZONE
+    used_at TIMESTAMP WITH TIME ZONE,
+    user_id UUID REFERENCES users(id)
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_invitations_token ON invitations(token);
