@@ -4,20 +4,33 @@
 **I want** to be required to enter a valid invitation token during sign-up  
 **So that** only invited users can register for ClientCard
 
-## Acceptance Criteria
-- The sign-up form includes a required field for **Invitation Token**
-- If a user submits a valid, **unused** token:
-  - The sign-up proceeds as normal
-  - The token is marked as **used**
-  - The token is associated with the newly created user
-  - The user is assigned the **"member"** role by default
-  - The user is redirected to the **dashboard page** after successful sign-up
-- If the token is **invalid**, **already used**, or **expired**:
-  - The user sees a clear error message
-  - The sign-up does **not** proceed
-- Token validation is case-sensitive and secure
-- Tokens cannot be reused once claimed
-- Token entry is required regardless of role or email
+## User Story
+
+**As** an invited user  
+**I want** to use my invitation token to join the platform  
+**So that** only authorized users can register, and I know my invite is valid
+
+## Outcomes & Experience
+
+- Users are prompted to enter (or have prefilled) their invitation token during signup.
+- The system clearly confirms when a token is valid, or explains why it isn’t.
+- Each token can only be used once, protecting platform integrity and privacy.
+- The process is accessible and works well on all devices.
+
+## Success Criteria
+
+- Only invited users can register.
+- Errors are clear, actionable, and accessible.
+- Admins can track token usage.
+
+---
+
+### Implementation Suggestions
+
+- Validate tokens server-side, mark as used on registration.
+- Prefill token from signup link when possible.
+- Use ARIA, mobile-friendly form controls, and inline feedback.
+- Audit all token usage.
 
 ## System Test Scenarios
 - [ ] User signs up with a valid, unused token → account is created, token marked used, redirected to dashboard

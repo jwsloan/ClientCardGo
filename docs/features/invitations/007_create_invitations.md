@@ -4,23 +4,33 @@
 **I want** to create invitation tokens for new users  
 **So that** I can control who is allowed to register for ClientCard
 
-## Acceptance Criteria
-- Admins can access an **Invitations** page at `/admin/invitations`
-- There is a visible and accessible **"Invitations" link** in the admin navigation (e.g., on the dashboard or a nav menu)
-- Admins can click a "Create Invitation" button to generate a new invitation
-- Each invitation includes:
-  - A **unique, secure token**
-  - An optional **note** (e.g., name of the person it's for)
-  - A **status** (unused, used, expired)
-- The list of existing invitations is visible on the page with:
-  - Token (partially masked)
-  - Note
-  - Status
-  - Creation timestamp
-- No email is sent at this stage — this is just token generation and tracking
-- Invitation tokens are not yet required to sign up (that comes in a later story)
-- Only users with an **admin role** can access this page
-- Invitations are persisted in the database
+## User Story
+
+**As** an administrator  
+**I want** to invite new users and track the status of invitations  
+**So that** I can control access and know which invites have been used
+
+## Outcomes & Experience
+
+- Admins can easily generate, track, and share invitation tokens for new users.
+- The invitation process is transparent, with clear status for each invite and its usage.
+- Copying and sharing invite links is effortless and reliable.
+- Only admins can manage invitations; the system is secure and auditable.
+
+## Success Criteria
+
+- Admins can always verify who has been invited and who has joined.
+- Invitation links are never reused or guessed.
+- The UI is accessible, mobile-friendly, and provides clear feedback.
+
+---
+
+### Implementation Suggestions
+
+- Store invitations in the database with status, note, and usage info.
+- Provide a "Copy Link" action for each invite.
+- Show usage (and user info) in the admin UI.
+- Protect all endpoints with RBAC, CSRF, and logging.
 
 ## System Test Scenarios
 - [ ] Admin visits `/admin/invitations` and sees a list of existing invitations

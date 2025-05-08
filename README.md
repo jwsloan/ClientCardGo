@@ -17,7 +17,7 @@ TBD
 
 ### Environment Variables
 
-Copy `.env.example` to `.env` and configure:
+Copy `.env.example` to `.env` and configure **all secrets via environment variables**:
 
 ```bash
 # Database
@@ -27,7 +27,7 @@ DB_NAME=clientcard
 DB_USER=postgres
 DB_PASSWORD=postgres
 
-# JWT
+# JWT (must never be hardcoded in code or config)
 JWT_SECRET=your-secret-key
 JWT_EXPIRY=24h
 
@@ -35,6 +35,7 @@ JWT_EXPIRY=24h
 PORT=8080
 ENV=development
 ```
+> **Note:** Secrets (DB_PASSWORD, JWT_SECRET, etc.) are always loaded from environment variables. Never commit secrets to code or config files.
 
 ### Backend (Go API)
 
@@ -54,7 +55,7 @@ ENV=development
    go run cmd/api/main.go
    ```
 
-### Frontend (Alpine.js)
+### Frontend (Alpine.js, TypeScript, Storybook)
 
 1. Install dependencies:
    ```bash
@@ -65,6 +66,12 @@ ENV=development
 2. Start development server:
    ```bash
    npm run dev
+   ```
+
+3. Build TypeScript and run Storybook:
+   ```bash
+   npm run build        # or tsc
+   npm run storybook    # starts Storybook for UI prototyping
    ```
 
 ## Testing
@@ -150,9 +157,36 @@ Git hooks are set up to run these automatically.
 ## Documentation
 
 - User stories in `docs/features/`
-- Architecture decisions in `docs/decisions/`
-- API documentation via Swagger at `/swagger`
+- **Architecture decisions (ADRs) in `docs/decisions/`** — always check here for rationale and extension patterns
 - Frontend component docs via Storybook
+
+## Admin Interview Insights & AI Analysis
+
+- Admins can securely browse and review anonymized user interview conversations from the admin dashboard.
+- Only admins can access these endpoints; all access is logged for privacy.
+- Interview transcripts are available for review, search, and actionable AI-powered analysis.
+- Admins can select sessions and generate product insights summaries using an LLM (see ADR 012/013).
+- All admin features are accessible, auditable, and built with privacy in mind.
+
+### AI Insights Setup
+
+To enable AI-powered insights, set the OpenAI API key in your environment:
+
+```sh
+export OPENAI_API_KEY=sk-...
+```
+
+The backend will use this key to call OpenAI for summarizing and analyzing interview data. If not set, the insights feature will be unavailable or will return a stub response.
+
+- **Never commit API keys to version control.**
+- You can change the LLM provider by implementing the `LLMService` interface.
+
+## Extending the API (Middleware & Features)
+
+- Add cross-cutting concerns as middleware in `internal/adapter/middleware/`
+- Compose middleware in `cmd/api/main.go` (see ADR 005)
+- New features: create domain/usecase/adapter layers and integration tests
+- Document all major design and security decisions as new ADRs
 
 ## Contributing
 

@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en" x-data="{ page: 'login', message: '', userName: '' }" x-init="
+    page = window.location.pathname === '/signup' ? 'signup' : 'login'
+">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClientCard – Auth</title>
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center bg-gray-100" x-data="{
+    ...$data,
+    isAuthenticated: false,
+    userRole: '',
+    checkAuth() {
+        // Simple simulation: check for session_token cookie. In reality, use an API call.
+        this.isAuthenticated = document.cookie.includes('session_token');
+        // For admin, set userRole = 'admin'; else '' (simulate for now)
+        this.userRole = this.isAuthenticated ? (document.cookie.includes('role=admin') ? 'admin' : '') : '';
+    }
+}" x-init="checkAuth()">
+
+    <!-- Navigation Bar -->
+    <nav class="w-full bg-white border-b mb-8 shadow" aria-label="Main Navigation">
+        <ul class="flex justify-center space-x-6 py-4" role="menubar">
+            <li>
+                <a href="/dashboard"
+                   @click.prevent="page = 'dashboard'; $event.target.focus()"
+                   class="text-gray-700 hover:text-blue-700 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                   role="menuitem"
+                   tabindex="0"
+                   aria-current="page"
+                   >Dashboard</a>
+            </li>
+            <li>
+                <a href="/user-insights"
+                   @click.prevent="page = 'user-insights'; $event.target.focus()"
+                   class="text-gray-700 hover:text-blue-700 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                   role="menuitem"
+                   tabindex="0"
+                   >Insights</a>
+            </li>
+            <li>
+                <a href="/profile-interview"
+                   @click.prevent="page = 'profile-interview'; $event.target.focus()"
+                   class="text-gray-700 hover:text-blue-700 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                   role="menuitem"
+                   tabindex="0"
+                   >Profile Interview</a>
+            </li>
+            <template x-if="userRole === 'admin'">
+                <li>
+                    <a href="/admin"
+                       @click.prevent="page = 'admin'; $event.target.focus()"
+                       class="text-gray-700 hover:text-blue-700 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                       role="menuitem"
+                       tabindex="0"
+                       >Admin</a>
+                </li>
+            </template>
+            <template x-if="!isAuthenticated">
+                <li>
+                    <a href="/login"
+                       @click.prevent="page = 'login'; $event.target.focus()"
+                       class="text-gray-700 hover:text-blue-700 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                       role="menuitem"
+                       tabindex="0"
+                       >Login</a>
+                </li>
+                <li>
+                    <a href="/signup"
+                       @click.prevent="page = 'signup'; $event.target.focus()"
+                       class="text-gray-700 hover:text-blue-700 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                       role="menuitem"
+                       tabindex="0"
+                       >Sign Up</a>
+                </li>
+            </template>
+            <template x-if="isAuthenticated">
+                <li>
+                    <button
+                        @click="logout"
+                        class="text-gray-700 hover:text-blue-700 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                        role="menuitem"
+                        tabindex="0"
+                        aria-label="Log out"
+                    >
+                        Log Out
+                    </button>
+                </li>
+            </template>
+        </ul>
+    </nav>
+
+    <main class="flex flex-col items-center justify-center flex-1 w-full">
+        <template x-if="page === 'login'">
+            <!-- login form as before -->
+            <form 
+                @submit.prevent="async function() {
+                    message = '';
+                    const resp = await fetch('/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: $refs.email.value, password: $refs.password.value })
+                    });
+                    if (resp.ok) {
+                        const data = await resp.json();
+                        message = data.message;
+                        userName = $refs.email.value;
+                        isAuthenticated = true;
+                        window.location.href = data.redirect;
+                    } else {
+                        message = 'Invalid email or password.';
+                    }
+                }()"
+                class="bg-white p-8 rounded shadow-md w-full max-w-md"
+                aria-labelledby="login-title"
+            >
+                <h1 id="login-title" class="text-xl mb-4">Login</h1>
+                <div>
+                    <label for="login-email" class="block">Email</label>
+                    <input x-ref="email" id="login-email" name="email" type="email" required autocomplete="email"
+                        class="border p-2 w-full" aria-required="true" data-testid="email">
+                </div>
+                <div class="mt-4">
+                    <label for="login-password" class="block">Password</label>
+                    <input x-ref="password" id="login-password" name="password" type="password" required autocomplete="current-password"
+                        class="border p-2 w-full" aria-required="true" data-testid="password">
+                </div>
+                <button type="submit" class="mt-6 w-full bg-blue-600 text-white p-2 rounded" data-testid="submit">
+                    Log In
+                </button>
+                <template x-if="message">
+                    <div class="mt-2 text-red-600" role="alert" x-text="message"></div>
+                </template>
+                <div class="mt-4">
+                    <a href="/signup" @click.prevent="page = 'signup'" class="underline text-blue-600">Need an account? Sign up</a>
+                </div>
+            </form>
+        </template>
+
+        <template x-if="page === 'signup'">
+            <!-- signup form as before, now with invitation token -->
+            <form 
+                x-data="{
+                    ...$data,
+                    invitationToken: '',
+                    init() {
+                        // Prefill invitationToken from query param
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const tokenParam = urlParams.get('invitation');
+                        if (tokenParam) {
+                            this.invitationToken = tokenParam;
+                        }
+                    }
+                }"
+                x-init="init()"
+                @submit.prevent="async function() {
+                    message = '';
+                    const resp = await fetch('/signup', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            email: $refs.su_email.value, 
+                            name: $refs.su_name.value, 
+                            password: $refs.su_password.value, 
+                            invitation_token: invitationToken 
+                        })
+                    });
+                    if (resp.ok) {
+                        const data = await resp.json();
+                        message = 'Welcome, ' + data.name + '! Your account is created.';
+                        page = 'login';
+                    } else {
+                        message = await resp.text();
+                    }
+                }()"
+                class="bg-white p-8 rounded shadow-md w-full max-w-md"
+                aria-labelledby="signup-title"
+            >
+                <h1 id="signup-title" class="text-xl mb-4">Sign Up</h1>
+                <div>
+                    <label for="signup-email" class="block">Email</label>
+                    <input x-ref="su_email" id="signup-email" name="email" type="email" required autocomplete="email"
+                        class="border p-2 w-full" aria-required="true" data-testid="email">
+                </div>
+                <div class="mt-4">
+                    <label for="signup-name" class="block">Name</label>
+                    <input x-ref="su_name" id="signup-name" name="name" type="text" required
+                        class="border p-2 w-full" aria-required="true" data-testid="name">
+                </div>
+                <div class="mt-4">
+                    <label for="signup-password" class="block">Password</label>
+                    <input x-ref="su_password" id="signup-password" name="password" type="password" required autocomplete="new-password"
+                        class="border p-2 w-full" aria-required="true" data-testid="password">
+                </div>
+                <div class="mt-4">
+                    <label for="signup-invitation" class="block">Invitation Token</label>
+                    <input id="signup-invitation" name="invitation_token" type="text" required
+                        class="border p-2 w-full" 
+                        aria-required="true" 
+                        data-testid="invitation-token"
+                        x-model="invitationToken"
+                        autocomplete="off"
+                    >
+                    <span class="text-xs text-gray-500">Ask your admin for your invitation link or token.</span>
+                </div>
+                <button type="submit" class="mt-6 w-full bg-green-600 text-white p-2 rounded" data-testid="submit">
+                    Sign Up
+                </button>
+                <template x-if="message">
+                    <div class="mt-2 text-red-600" role="alert" x-text="message"></div>
+                </template>
+                <div class="mt-4">
+                    <a href="/login" @click.prevent="page = 'login'" class="underline text-blue-600">Already have an account? Log in</a>
+                </div>
+            </form>
+        </template>
+
+        <!-- Placeholder templates for dashboard, admin, insights, etc. -->
+        <template x-if="page === 'dashboard'">
+            <div class="bg-white p-8 rounded shadow-md w-full max-w-md" aria-labelledby="dashboard-title">
+                <h1 id="dashboard-title" class="text-xl mb-4">Dashboard</h1>
+                <p>Welcome to your dashboard.</p>
+            </div>
+        </template>
+        <template x-if="page === 'admin'">
+            <div class="bg-white p-8 rounded shadow-md w-full max-w-6xl" aria-labelledby="admin-title" x-data="adminDashboard()">
+                <h1 id="admin-title" class="text-xl mb-4">Admin Dashboard</h1>
+                <nav class="mb-3 flex gap-4">
+                    <a href="#" @click.prevent="tab = 'invitations'" :class="tab === 'invitations' ? 'underline font-bold' : ''">Invitations</a>
+                    <a href="#" @click.prevent="tab = 'interviews'" :class="tab === 'interviews' ? 'underline font-bold' : ''">User Interviews</a>
+                    <a href="#" @click.prevent="tab = 'ai-insights'" :class="tab === 'ai-insights' ? 'underline font-bold' : ''">AI Insights</a>
+                </nav>
+                <template x-if="tab === 'invitations'">
+                    <div class="mt-4">
+                        <button @click="createInvitation" class="bg-green-600 text-white px-4 py-2 rounded mb-4">Create Invitation</button>
+                        <table class="w-full border text-sm" aria-label="Invitation list">
+                            <!-- ... -->
+                        </table>
+                        <template x-if="copyMsg">
+                            <div class="mt-2 text-green-600" x-text="copyMsg"></div>
+                        </template>
+                    </div>
+                </template>
+                <template x-if="tab === 'interviews'">
+                    <div class="mt-4" x-data="adminInterviews()">
+                        <h2 class="text-lg mb-2">User Interview Sessions</h2>
+                        <table class="w-full border text-sm mb-4" aria-label="Interview sessions">
+                            <thead>
+                                <tr>
+                                    <th class="border px-2 py-1">Session ID</th>
+                                    <th class="border px-2 py-1">User ID</th>
+                                    <th class="border px-2 py-1">Created</th>
+                                    <th class="border px-2 py-1">Completed</th>
+                                    <th class="border px-2 py-1">Length</th>
+                                    <th class="border px-2 py-1">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template x-for="sess in sessions" :key="sess.id">
+                                    <tr>
+                                        <td class="border px-2 py-1" x-text="sess.id"></td>
+                                        <td class="border px-2 py-1" x-text="sess.user_id"></td>
+                                        <td class="border px-2 py-1" x-text="sess.created"></td>
+                                        <td class="border px-2 py-1" x-text="sess.completed"></td>
+                                        <td class="border px-2 py-1" x-text="sess.length"></td>
+                                        <td class="border px-2 py-1">
+                                            <button @click="viewTranscript(sess.id)" class="bg-blue-500 text-white px-2 py-1 rounded text-xs" aria-label="View transcript">View</button>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                        <div class="mt-6 bg-gray-50 p-4 rounded" aria-live="polite" aria-label="Chat transcript" x-show="transcript">
+                            <div class="text-xs text-gray-500 mb-2" x-text="'Transcript for Session ' + transcript.session_id"></div>
+                            <div>
+                                <template x-for="msg in transcript.messages" :key="msg.id">
+                                    <div>
+                                        <span :class="msg.sender === 'system' ? 'font-bold text-blue-700' : 'font-bold text-green-700'" x-text="msg.sender === 'system' ? 'System:' : 'User:'"></span>
+                                        <span x-text="msg.content"></span>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+                <template x-if="tab === 'ai-insights'">
+                    <div class="mt-4" x-data="adminAIInsights()">
+                        <h2 class="text-lg mb-2">AI-Generated Insights</h2>
+                        <form @submit.prevent="generateInsights">
+                            <label class="block mb-2 font-bold">Select Sessions:</label>
+                            <div class="flex flex-col gap-2 mb-4">
+                                <template x-for="sess in allSessions" :key="sess.id">
+                                    <label>
+                                        <input type="checkbox" :value="sess.id" x-model="selectedSessions">
+                                        <span x-text="'Session ' + sess.id + ' (User: ' + sess.user_id + ', Completed: ' + sess.completed + ')'"></span>
+                                    </label>
+                                </template>
+                            </div>
+                            <button type="submit" class="bg-purple-700 text-white px-4 py-2 rounded">Generate Insights</button>
+                        </form>
+                        <div class="mt-6 p-4 bg-gray-50 rounded text-gray-800" aria-live="polite" x-show="summary.length">
+                            <div class="font-bold mb-2">AI Insights Summary:</div>
+                            <div x-text="summary"></div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </template>
+    <script>
+        function adminDashboard() {
+            return {
+                tab: 'invitations'
+            }
+        }
+        function adminInterviews() {
+            return {
+                sessions: [],
+                transcript: null,
+                async init() {
+                    const res = await fetch('/admin/interviews');
+                    if (res.ok) {
+                        this.sessions = await res.json();
+                    }
+                },
+                async viewTranscript(id) {
+                    const res = await fetch('/admin/interviews?session_id=' + encodeURIComponent(id));
+                    if (res.ok) {
+                        this.transcript = await res.json();
+                    }
+                }
+            }
+        }
+        function adminAIInsights() {
+            return {
+                allSessions: [],
+                selectedSessions: [],
+                summary: '',
+                async init() {
+                    const res = await fetch('/admin/interviews');
+                    if (res.ok) {
+                        this.allSessions = await res.json();
+                    }
+                },
+                async generateInsights() {
+                    if (!this.selectedSessions.length) {
+                        this.summary = "Please select at least one session.";
+                        return;
+                    }
+                    this.summary = "Generating AI insights…";
+                    const res = await fetch('/admin/ai-insights', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ session_ids: this.selectedSessions, prompt_type: "summary" })
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        this.summary = data.summary;
+                    } else {
+                        this.summary = "Error generating insights.";
+                    }
+                }
+            }
+        }
+    </script>
+                                            <template x-if="inv.user_email">
+                                                <span class="text-gray-500 text-xs" x-text="' (' + inv.user_email + ')'"></span>
+                                            </template>
+                                        </td>
+                                        <td class="border px-2 py-1">
+                                            <button @click="copySignupLink(inv.token)" class="bg-blue-500 text-white px-2 py-1 rounded text-xs" aria-label="Copy signup link">Copy Link</button>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                        <template x-if="copyMsg">
+                            <div class="mt-2 text-green-600" x-text="copyMsg"></div>
+                        </template>
+                    </div>
+                </template>
+            </div>
+        </template>
+    <script>
+        function adminInvitations() {
+            return {
+                tab: 'invitations',
+                invitations: [],
+                copyMsg: '',
+                async init() {
+                    await this.fetchInvitations();
+                },
+                async fetchInvitations() {
+                    const res = await fetch('/admin/invitations');
+                    if (res.ok) {
+                        this.invitations = await res.json();
+                    }
+                },
+                async createInvitation() {
+                    const res = await fetch('/admin/invitations', { method: 'POST' });
+                    if (res.ok) {
+                        await this.fetchInvitations();
+                    }
+                },
+                maskToken(token) {
+                    if (!token) return '';
+                    return token.slice(0, 4) + '••••' + token.slice(-2);
+                },
+                async copySignupLink(token) {
+                    const url = `${window.location.origin}/signup?invitation=${encodeURIComponent(token)}`;
+                    await navigator.clipboard.writeText(url);
+                    this.copyMsg = 'Signup link copied!';
+                    setTimeout(() => { this.copyMsg = ''; }, 2000);
+                }
+            }
+        }
+    </script>
+        <template x-if="page === 'user-insights'">
+            <div class="bg-white p-8 rounded shadow-md w-full max-w-md" aria-labelledby="insights-title">
+                <h1 id="insights-title" class="text-xl mb-4">User Insights</h1>
+                <p>Insights coming soon.</p>
+            </div>
+        </template>
+        <template x-if="page === 'profile-interview'">
+            <div class="bg-white p-8 rounded shadow-md w-full max-w-md" aria-labelledby="interview-title"
+                 x-data="profileInterviewChat()">
+                <h1 id="interview-title" class="text-xl mb-4">Profile Interview</h1>
+                <div class="mb-4 text-gray-600">
+                    <span>This interview helps us understand your strengths and story. You can type or (in a future release) use your voice!</span>
+                </div>
+                <div class="flex flex-col mb-2 border h-60 overflow-y-auto bg-gray-50 p-2 rounded" aria-live="polite" aria-label="Chat history" tabindex="0">
+                    <template x-for="msg in messages" :key="msg.id">
+                        <div :class="msg.sender === 'user' ? 'text-right' : 'text-left'">
+                            <span class="inline-block px-2 py-1 rounded mb-1"
+                                  :class="msg.sender === 'user' ? 'bg-blue-100 text-blue-900' : 'bg-gray-200 text-gray-900'"
+                                  x-text="msg.content"></span>
+                        </div>
+                    </template>
+                </div>
+                <form class="flex flex-col gap-2 mt-2" @submit.prevent="sendMessage" autocomplete="off" aria-label="Chat input" x-show="!interviewCompleted">
+                    <template x-if="supportsVoice">
+                        <div class="flex items-center gap-2">
+                            <button type="button"
+                                class="bg-purple-600 text-white px-3 py-1 rounded focus:outline-none focus:ring"
+                                :class="voiceActive ? 'bg-red-600' : 'bg-purple-600'"
+                                aria-label="Start voice input"
+                                @click="voiceActive ? stopVoice() : startVoice()"
+                                :aria-pressed="voiceActive"
+                                tabindex="0"
+                            >
+                                <span x-text="voiceActive ? 'Stop Voice' : 'Speak'"></span>
+                            </button>
+                            <span class="text-sm text-gray-500">You can speak or type your response.</span>
+                            <template x-if="voiceActive">
+                                <span class="ml-2 flex items-center gap-1 text-red-600 font-bold animate-pulse" aria-live="assertive" role="status">
+                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="8"/></svg>
+                                    Recording…
+                                </span>
+                            </template>
+                        </div>
+                    </template>
+                    <template x-if="voiceActive">
+                        <div class="flex flex-col gap-2">
+                            <textarea
+                                x-model="transcript"
+                                class="border p-2 w-full rounded"
+                                rows="2"
+                                aria-label="Voice transcript (edit before sending)"
+                            ></textarea>
+                            <button type="button"
+                                class="bg-gray-500 text-white px-2 py-1 rounded focus:outline-none focus:ring"
+                                @click="transcript = ''; stopVoice()"
+                                tabindex="0"
+                            >Retry Voice Input</button>
+                        </div>
+                    </template>
+                    <template x-if="!voiceActive">
+                        <input x-ref="input"
+                            x-model="input"
+                            type="text"
+                            class="border p-2 w-full rounded"
+                            placeholder="Type your message…"
+                            aria-label="Type your message"
+                            required
+                            @keydown.enter="sendMessage"
+                        />
+                    </template>
+                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded w-full mt-1" aria-label="Send message">Send</button>
+                </form>
+                <div class="w-full flex justify-end mt-1" x-show="!interviewCompleted">
+                    <button type="button"
+                        class="bg-gray-700 text-white px-3 py-1 rounded focus:outline-none focus:ring"
+                        aria-label="Finish Interview"
+                        @click="finishInterview"
+                    >Finish Interview</button>
+                </div>
+                <template x-if="interviewCompleted">
+                    <div class="mt-4 bg-green-100 text-green-900 p-4 rounded text-center font-bold flex flex-col items-center gap-3">
+                        <div>🎉 Thank you! Your interview is complete.</div>
+                        <div class="font-normal text-gray-800">You’re all set. Here’s what you can do next:</div>
+                        <div class="flex flex-col gap-2 w-full max-w-xs">
+                            <a href="/dashboard" @click.prevent="page = 'dashboard'" class="w-full bg-blue-600 text-white p-2 rounded shadow focus:outline-none focus:ring text-center" tabindex="0" role="button">Go to Dashboard</a>
+                            <a href="/user-insights" @click.prevent="page = 'user-insights'" class="w-full bg-gray-200 text-gray-900 p-2 rounded shadow focus:outline-none focus:ring text-center" tabindex="0" role="button">Explore Insights</a>
+                        </div>
+                        <div class="text-xs text-gray-500 mt-2">You can always update your profile interview later.</div>
+                    </div>
+                </template>
+                <template x-if="error">
+                    <div class="text-red-600 mt-2" role="alert" x-text="error"></div>
+                </template>
+                <template x-if="!supportsVoice">
+                    <div class="text-xs text-gray-500 mt-2">Voice input is not supported in your browser or device. You can always type your response.</div>
+                </template>
+                <template x-if="error">
+                    <div class="text-red-600 mt-2" role="alert" x-text="error"></div>
+                </template>
+            </div>
+        </template>
+    </main>
+    <script type="module">
+        import { profileInterviewChat } from './src/profileInterviewChat.js';
+        // Make the TS Alpine.js logic globally available
+        window.profileInterviewChat = profileInterviewChat;
+    </script>
+</body>
+</html>

@@ -3,27 +3,36 @@
 ## User Story
 As a busy professional completing my profile, I want to have a natural conversation about my experience and skills, so that I can share my story in a way that feels authentic and effortless.
 
-## Acceptance Criteria
+## User Story
 
-### Natural Interaction
-- I can choose to speak or type my responses based on my situation
-- The conversation flows naturally, like talking to a colleague
-- I can easily correct or adjust my responses
+**As** a new user  
+**I want** to complete my onboarding interview in a way that feels natural, private, and accessible  
+**So that** I can share my experience and needs efficiently, using the input mode that works best for me
 
-### Seamless Mobile Experience
-- I can complete my profile while commuting or between meetings
-- Voice input works smoothly on my phone
-- I can switch between typing and speaking as needed
+## Outcomes & Experience
 
-### Accessibility and Privacy
-- I'm clearly informed about voice features and privacy
-- I can fully participate using only text if I prefer
-- The experience is consistent regardless of my input choice
+- Users can interact with an onboarding chat using either voice or typing, switching at any time.
+- The interview starts with a friendly system message that explains the process, privacy, and how to participate.
+- Users always control when to finish, and can review or edit their responses before sending.
+- The system saves progress automatically; if a user leaves, they can resume later from where they stopped.
+- The experience is fully accessible (screen reader, keyboard, mobile) and respects privacy and consent around voice input.
+- After completion, users see a “You’re all set!” screen with clear next steps.
 
-### Thoughtful Guidance
-- The interview helps me highlight my key strengths
-- Questions adapt based on my previous answers
-- I receive gentle prompts if I'm unsure what to share
+## Success Criteria
+
+- Users report high satisfaction and confidence in onboarding.
+- No user is blocked by device or ability.
+- Privacy, accessibility, and user control are never compromised.
+
+---
+
+### Implementation Suggestions
+
+- Use a chat UI with progressive enhancement for voice (Web Speech API or similar).
+- Save chat history in the backend; resume as needed.
+- Show a live recording indicator and allow retry/clear for voice input.
+- Use ARIA live regions for all dynamic feedback.
+- After completion, show onboarding with links to dashboard/features.
 
 ## User Scenarios
 
